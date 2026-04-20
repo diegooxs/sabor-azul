@@ -2,6 +2,8 @@ import { reactive } from 'vue'
 
 export const estadoCarrito = reactive({
   items: [],
+  ultimaAccion: 0,
+  ultimoProductoAgregado: null,
 
   get totalArticulos() {
     return this.items.reduce((total, item) => total + item.cantidad, 0)
@@ -18,6 +20,9 @@ export const estadoCarrito = reactive({
     } else {
       this.items.push({ ...platillo, cantidad: 1 })
     }
+
+    this.ultimoProductoAgregado = platillo.nombre
+    this.ultimaAccion++
   },
 
   actualizarCantidad(id, cantidad) {

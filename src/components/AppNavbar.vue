@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { estadoCarrito } from '../store/carrito'
 import { estadoPedidos } from '../store/pedidos'
@@ -10,6 +10,13 @@ const esInicio = computed(() => route.path === '/')
 
 const procesando = ref(false)
 const pagoExitoso = ref(false)
+const mostrarToastCarrito = ref(false)
+const productoToast = ref('')
+const mostrarCarritoFlotante = ref(false)
+const animarContador = ref(false)
+
+let timeoutToast
+let timeoutContador
 
 const procesarPagoMock = () => {
   procesando.value = true
@@ -45,6 +52,58 @@ const aumentarCantidad = (item) => {
 const disminuirCantidad = (item) => {
   estadoCarrito.actualizarCantidad(item.id, item.cantidad - 1)
 }
+
+const abrirCarrito = () => {
+  const panelCarrito = document.getElementById('carritoLateral')
+  if (!panelCarrito || !window.bootstrap) return
+
+  const instancia = window.bootstrap.Offcanvas.getOrCreateInstance(panelCarrito)
+  instancia.show()
+}
+
+const manejarScroll = () => {
+  mostrarCarritoFlotante.value = window.scrollY > 320 && estadoCarrito.totalArticulos > 0
+}
+
+watch(
+  () => estadoCarrito.ultimaAccion,
+  () => {
+    productoToast.value = estadoCarrito.ultimoProductoAgregado || 'Producto'
+    mostrarToastCarrito.value = true
+    animarContador.value = true
+
+    clearTimeout(timeoutToast)
+    clearTimeout(timeoutContador)
+
+    timeoutToast = window.setTimeout(() => {
+      mostrarToastCarrito.value = false
+    }, 2200)
+
+    timeoutContador = window.setTimeout(() => {
+      animarContador.value = false
+    }, 550)
+
+    manejarScroll()
+  },
+)
+
+watch(
+  () => estadoCarrito.totalArticulos,
+  () => {
+    manejarScroll()
+  },
+)
+
+onMounted(() => {
+  manejarScroll()
+  window.addEventListener('scroll', manejarScroll, { passive: true })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', manejarScroll)
+  clearTimeout(timeoutToast)
+  clearTimeout(timeoutContador)
+})
 </script>
 
 <template>
@@ -88,6 +147,7 @@ const disminuirCantidad = (item) => {
           <li class="nav-item">
             <a
               class="nav-link text-white d-flex align-items-center"
+              :class="{ 'cart-bounce': animarContador }"
               href="#"
               data-bs-toggle="offcanvas"
               data-bs-target="#carritoLateral"
@@ -256,6 +316,35 @@ const disminuirCantidad = (item) => {
     </div>
   </div>
 
+  <transition name="cart-toast">
+    <div v-if="mostrarToastCarrito" class="toast-carrito shadow-lg">
+      <div class="toast-carrito__icono">
+        <i class="bi bi-cart-check-fill"></i>
+      </div>
+      <div class="toast-carrito__contenido">
+        <strong>Agregado al carrito</strong>
+        <span>{{ productoToast }}</span>
+      </div>
+    </div>
+  </transition>
+
+  <transition name="cart-fab">
+    <button
+      v-if="mostrarCarritoFlotante"
+      class="btn carrito-flotante shadow-lg"
+      type="button"
+      @click="abrirCarrito"
+    >
+      <span class="carrito-flotante__icono">
+        <i class="bi bi-bag-check-fill"></i>
+      </span>
+      <span class="text-start">
+        <strong class="d-block">Tu carrito</strong>
+        <small>{{ estadoCarrito.totalArticulos }} artículos</small>
+      </span>
+    </button>
+  </transition>
+
   <div class="modal fade" id="modalPago" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -355,6 +444,130 @@ const disminuirCantidad = (item) => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.cart-bounce {
+  animation: cartPulse 0.55s ease;
+}
+
+.toast-carrito {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.5rem;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 280px;
+  max-width: 360px;
+  padding: 0.95rem 1rem;
+  border-radius: 1.1rem;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  backdrop-filter: blur(8px);
+}
+
+.toast-carrito__icono {
+  width: 46px;
+  height: 46px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.toast-carrito__contenido {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.toast-carrito__contenido span {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.92rem;
+  margin-top: 0.15rem;
+}
+
+.carrito-flotante {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 5.75rem;
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.85rem 1rem;
+  background: linear-gradient(135deg, #1a365d, #274c77);
+  color: #fff;
+}
+
+.carrito-flotante:hover {
+  background: linear-gradient(135deg, #274c77, #1a365d);
+  color: #fff;
+}
+
+.carrito-flotante__icono {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 1.15rem;
+}
+
+.cart-toast-enter-active,
+.cart-toast-leave-active,
+.cart-fab-enter-active,
+.cart-fab-leave-active {
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.cart-toast-enter-from,
+.cart-toast-leave-to,
+.cart-fab-enter-from,
+.cart-fab-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+}
+
+@keyframes cartPulse {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.16);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 576px) {
+  .toast-carrito {
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: 1rem;
+    min-width: auto;
+    max-width: none;
+  }
+
+  .carrito-flotante {
+    right: 0.75rem;
+    left: 0.75rem;
+    bottom: 5.5rem;
+    justify-content: center;
+  }
+}
+</style>
 
 <style scoped>
 .nav-link {
