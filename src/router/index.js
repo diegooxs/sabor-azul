@@ -60,7 +60,6 @@ const routes = [
 ]
 
 const router = createRouter({
-  // El uso de Hash History es la solución para el error de MIME type en servidores como 'serve'
   history: createWebHashHistory(),
   routes,
 })

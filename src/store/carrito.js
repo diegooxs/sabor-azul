@@ -20,6 +20,19 @@ export const estadoCarrito = reactive({
     }
   },
 
+  actualizarCantidad(id, cantidad) {
+    const item = this.items.find((producto) => producto.id === id)
+
+    if (!item) return
+
+    if (cantidad <= 0) {
+      this.eliminar(id)
+      return
+    }
+
+    item.cantidad = cantidad
+  },
+
   quitar(id) {
     const index = this.items.findIndex((item) => item.id === id)
     if (index !== -1) {
@@ -30,6 +43,11 @@ export const estadoCarrito = reactive({
       }
     }
   },
+
+  eliminar(id) {
+    this.items = this.items.filter((item) => item.id !== id)
+  },
+
   vaciar() {
     this.items = []
   },

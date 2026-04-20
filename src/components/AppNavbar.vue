@@ -25,6 +25,14 @@ const resetearModal = () => {
     pagoExitoso.value = false
   }, 500)
 }
+
+const aumentarCantidad = (item) => {
+  estadoCarrito.actualizarCantidad(item.id, item.cantidad + 1)
+}
+
+const disminuirCantidad = (item) => {
+  estadoCarrito.actualizarCantidad(item.id, item.cantidad - 1)
+}
 </script>
 
 <template>
@@ -172,23 +180,49 @@ const resetearModal = () => {
         <div
           v-for="item in estadoCarrito.items"
           :key="item.id"
-          class="d-flex align-items-center mb-3 pb-3 border-bottom"
+          class="mb-3 pb-3 border-bottom"
         >
-          <img
-            :src="item.imagen"
-            class="rounded me-3"
-            style="width: 60px; height: 60px; object-fit: cover"
-          />
-          <div class="flex-grow-1">
-            <h6 class="mb-0 fw-bold">{{ item.nombre }}</h6>
-            <small class="text-muted">${{ item.precio.toFixed(2) }} x {{ item.cantidad }}</small>
+          <div class="d-flex align-items-center">
+            <img
+              :src="item.imagen"
+              class="rounded me-3"
+              style="width: 60px; height: 60px; object-fit: cover"
+            />
+            <div class="flex-grow-1">
+              <h6 class="mb-1 fw-bold">{{ item.nombre }}</h6>
+              <small class="text-muted d-block">${{ item.precio.toFixed(2) }} c/u</small>
+              <small class="fw-semibold">Subtotal: ${{ (item.precio * item.cantidad).toFixed(2) }}</small>
+            </div>
+            <button
+              @click="estadoCarrito.eliminar(item.id)"
+              class="btn btn-sm btn-outline-danger border-0"
+              title="Eliminar producto"
+            >
+              <i class="bi bi-trash3 fs-5"></i>
+            </button>
           </div>
-          <button
-            @click="estadoCarrito.quitar(item.id)"
-            class="btn btn-sm btn-outline-danger border-0"
-          >
-            <i class="bi bi-dash-circle fs-5"></i>
-          </button>
+
+          <div class="d-flex align-items-center justify-content-between mt-3">
+            <div class="btn-group" role="group" aria-label="Editar cantidad">
+              <button
+                @click="disminuirCantidad(item)"
+                class="btn btn-outline-dark btn-sm"
+                title="Disminuir cantidad"
+              >
+                <i class="bi bi-dash-lg"></i>
+              </button>
+              <span class="btn btn-light btn-sm disabled px-3">{{ item.cantidad }}</span>
+              <button
+                @click="aumentarCantidad(item)"
+                class="btn btn-outline-dark btn-sm"
+                title="Aumentar cantidad"
+              >
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+
+            <small class="text-muted">{{ item.cantidad }} en tu carrito</small>
+          </div>
         </div>
       </div>
 
