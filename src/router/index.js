@@ -10,6 +10,7 @@ import PerfilView from '@/views/PerfilView.vue'
 import AdminMenuView from '@/views/AdminMenuView.vue'
 import GaleriaView from '@/views/GaleriaView.vue'
 import AdminUsuariosView from '@/views/AdminUsuariosView.vue'
+import AdminPedidosView from '@/views/AdminPedidosView.vue'
 
 const routes = [
   {
@@ -56,6 +57,11 @@ const routes = [
     path: '/admin/usuarios',
     name: 'admin-usuarios',
     component: AdminUsuariosView,
+  },
+  {
+    path: '/admin/pedidos',
+    name: 'admin-pedidos',
+    component: AdminPedidosView,
   },
 ]
 

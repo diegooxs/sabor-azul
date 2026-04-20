@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { estadoCarrito } from '../store/carrito'
+import { estadoPedidos } from '../store/pedidos'
 import { datosUsuario } from '../store/usuario'
 
 const route = useRoute()
@@ -14,6 +15,17 @@ const procesarPagoMock = () => {
   procesando.value = true
 
   setTimeout(() => {
+    estadoPedidos.crearPedido({
+      cliente: datosUsuario.nombre,
+      total: estadoCarrito.totalPrecio,
+      productos: estadoCarrito.items.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        precio: item.precio,
+        cantidad: item.cantidad,
+      })),
+    })
+
     procesando.value = false
     pagoExitoso.value = true
     estadoCarrito.vaciar()
