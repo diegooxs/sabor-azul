@@ -121,6 +121,11 @@ const resetearModal = () => {
                     ><i class="bi bi-list-check me-2"></i>Ver Pedidos</router-link
                   >
                 </li>
+                <li>
+                  <router-link class="dropdown-item" to="/admin/usuarios">
+                    <i class="bi bi-people-fill"></i> Gestión de Usuarios Express
+                  </router-link>
+                </li>
                 <li><hr class="dropdown-divider" /></li>
               </template>
 

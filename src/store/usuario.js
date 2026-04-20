@@ -8,32 +8,42 @@ export const datosUsuario = reactive({
   foto: 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff',
   rol: 'invitado',
 
-  iniciarSesion(correo) {
-    if (correo === 'admin@saborazul.com') {
-      this.nombre = 'Admin'
-      this.apellido = 'Principal'
-      this.email = correo
-      this.rol = 'admin'
-      this.foto = 'https://ui-avatars.com/api/?name=Admin&background=dc3545&color=fff'
-    } else {
-      this.nombre = 'Santiago'
-      this.apellido = 'González'
-      this.email = correo
-      this.telefono = '951 123 4567'
-      this.rol = 'cliente'
-      this.foto = 'https://ui-avatars.com/api/?name=Santiago+G&background=1a365d&color=fff'
+  //urlApi: 'http://10.20.130.143:8000/api',x
+  // Asegúrate de que tenga el "/usuarios" al final
+  urlApi: 'https://backend-sabor-azul.onrender.com/api',
+
+  async iniciarSesion(username, password) {
+    try {
+      const respuesta = await fetch(`${this.urlApi}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+
+      const datos = await respuesta.json()
+
+      if (respuesta.ok) {
+        this.nombre = datos.username
+        this.rol = datos.rol
+        this.email = username
+        this.foto = `https://ui-avatars.com/api/?name=${datos.username}&background=1a365d&color=fff`
+
+        return { success: true }
+      } else {
+        alert(datos.message || 'Credenciales incorrectas')
+        return { success: false }
+      }
+    } catch (error) {
+      console.error('Error conectando al servidor:', error)
+      alert('No se pudo conectar con el servidor de Sabor Azul')
+      return { success: false }
     }
   },
 
   cerrarSesion() {
     this.nombre = 'Invitado'
     this.rol = 'invitado'
-  },
-
-  actualizarPerfil(nuevosDatos) {
-    this.nombre = nuevosDatos.nombre
-    this.apellido = nuevosDatos.apellido
-    this.email = nuevosDatos.email
-    this.telefono = nuevosDatos.telefono
+    this.email = ''
+    this.foto = 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff'
   },
 })

@@ -25,14 +25,14 @@
         <form @submit.prevent="iniciarSesion">
           <div class="form-floating mb-3 text-start">
             <input
-              type="email"
+              type="text"
               class="form-control rounded-3"
-              id="emailInput"
-              v-model="emailLogin"
-              placeholder="nombre@ejemplo.com"
+              id="userInput"
+              v-model="nombreUsuario"
+              placeholder="Usuario"
               required
             />
-            <label for="emailInput" class="text-muted">Correo electrónico</label>
+            <label for="userInput" class="text-muted">Usuario</label>
           </div>
 
           <div class="form-floating mb-4 text-start">
@@ -40,6 +40,7 @@
               type="password"
               class="form-control rounded-3"
               id="passwordInput"
+              v-model="passwordLogin"
               placeholder="Contraseña"
               required
             />
@@ -69,15 +70,21 @@ import { useRouter } from 'vue-router'
 import { datosUsuario } from '../store/usuario'
 
 const router = useRouter()
-const emailLogin = ref('')
+const nombreUsuario = ref('') // Cambiado de emailLogin a nombreUsuario
+const passwordLogin = ref('')
 
-const iniciarSesion = () => {
-  datosUsuario.iniciarSesion(emailLogin.value)
+const iniciarSesion = async () => {
+  // Enviamos nombreUsuario.value al store
+  const resultado = await datosUsuario.iniciarSesion(nombreUsuario.value, passwordLogin.value)
 
-  if (datosUsuario.rol === 'admin') {
-    router.push('/admin')
+  if (resultado.success) {
+    if (datosUsuario.rol === 'admin') {
+      router.push('/admin')
+    } else {
+      router.push('/')
+    }
   } else {
-    router.push('/')
+    passwordLogin.value = ''
   }
 }
 </script>
@@ -87,5 +94,10 @@ const iniciarSesion = () => {
   opacity: 0.9;
   transform: translateY(-1px);
   transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 0.25rem rgba(15, 23, 42, 0.25);
 }
 </style>
