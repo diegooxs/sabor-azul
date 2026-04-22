@@ -202,9 +202,9 @@ onUnmounted(() => {
                   >
                 </li>
                 <li>
-                  <router-link class="dropdown-item" to="/admin/usuarios">
-                    <i class="bi bi-people-fill"></i> Gestión de Usuarios Express
-                  </router-link>
+                  <router-link class="dropdown-item text-primary fw-bold py-2" to="/admin/usuarios"
+                    ><i class="bi bi-people-fill me-2"></i>Gestión de usuarios</router-link
+                  >
                 </li>
                 <li><hr class="dropdown-divider" /></li>
               </template>
@@ -249,11 +249,7 @@ onUnmounted(() => {
       </div>
 
       <div v-else class="flex-grow-1 overflow-auto">
-        <div
-          v-for="item in estadoCarrito.items"
-          :key="item.id"
-          class="mb-3 pb-3 border-bottom"
-        >
+        <div v-for="item in estadoCarrito.items" :key="item.id" class="mb-3 pb-3 border-bottom">
           <div class="d-flex align-items-center">
             <img
               :src="item.imagen"
@@ -263,7 +259,9 @@ onUnmounted(() => {
             <div class="flex-grow-1">
               <h6 class="mb-1 fw-bold">{{ item.nombre }}</h6>
               <small class="text-muted d-block">${{ item.precio.toFixed(2) }} c/u</small>
-              <small class="fw-semibold">Subtotal: ${{ (item.precio * item.cantidad).toFixed(2) }}</small>
+              <small class="fw-semibold"
+                >Subtotal: ${{ (item.precio * item.cantidad).toFixed(2) }}</small
+              >
             </div>
             <button
               @click="estadoCarrito.eliminar(item.id)"
