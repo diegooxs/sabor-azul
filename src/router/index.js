@@ -12,6 +12,7 @@ import GaleriaView from '@/views/GaleriaView.vue'
 import AdminUsuariosView from '@/views/AdminUsuariosView.vue'
 import AdminPedidosView from '@/views/AdminPedidosView.vue'
 import AdminReservasView from '@/views/AdminReservasView.vue'
+import AdminContactoView from '@/views/AdminContactoView.vue'
 
 const routes = [
   {
@@ -68,6 +69,11 @@ const routes = [
     path: '/admin/reservas',
     name: 'admin-reservas',
     component: AdminReservasView,
+  },
+  {
+    path: '/admin/contacto',
+    name: 'admin-contacto',
+    component: AdminContactoView,
   },
 ]
 

@@ -58,9 +58,14 @@
                 type="submit"
                 class="btn btn-dark w-100 py-3 text-uppercase fw-bold rounded-pill mt-auto"
                 style="letter-spacing: 1px"
+                :disabled="enviando"
               >
-                Enviar Mensaje
+                {{ enviando ? 'Enviando...' : 'Enviar Mensaje' }}
               </button>
+
+              <p v-if="errorEnvio" class="text-danger small text-center mt-3 mb-0">
+                {{ errorEnvio }}
+              </p>
             </form>
           </div>
 
@@ -129,8 +134,11 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
+import { estadoMensajesContacto } from '../store/mensajesContacto'
 
 const mensajeEnviado = ref(false)
+const enviando = ref(false)
+const errorEnvio = ref('')
 
 const formulario = reactive({
   nombre: '',
@@ -138,12 +146,23 @@ const formulario = reactive({
   mensaje: '',
 })
 
-const enviarMensaje = () => {
-  mensajeEnviado.value = true
+const enviarMensaje = async () => {
+  enviando.value = true
+  errorEnvio.value = ''
+
+  try {
+    await estadoMensajesContacto.crearMensaje({ ...formulario })
+    mensajeEnviado.value = true
+  } catch (error) {
+    errorEnvio.value = error.message || 'No se pudo enviar el mensaje'
+  } finally {
+    enviando.value = false
+  }
 }
 
 const nuevoMensaje = () => {
   mensajeEnviado.value = false
+  errorEnvio.value = ''
   formulario.nombre = ''
   formulario.email = ''
   formulario.mensaje = ''
