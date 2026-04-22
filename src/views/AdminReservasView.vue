@@ -82,13 +82,14 @@
                     <select
                       :value="reserva.estado"
                       @change="actualizarEstado(reserva.id, $event.target.value)"
-                      :class="{
-                        'badge': true,
-                        'bg-warning text-dark': reserva.estado === 'pendiente',
-                        'bg-success': reserva.estado === 'confirmada',
-                        'bg-secondary': reserva.estado === 'cancelada',
-                      }"
-                      style="cursor: pointer; border: none"
+                      :class="[
+                        'status-select',
+                        {
+                          'status-pending': reserva.estado === 'pendiente',
+                          'status-confirmed': reserva.estado === 'confirmada',
+                          'status-canceled': reserva.estado === 'cancelada',
+                        },
+                      ]"
                     >
                       <option value="pendiente">Pendiente</option>
                       <option value="confirmada">Confirmada</option>
@@ -144,7 +145,18 @@ const eliminarReserva = async (id) => {
 }
 
 const formatearFecha = (fecha) => {
-  return new Date(fecha).toLocaleDateString('es-ES', {
+  if (!fecha) return 'Sin fecha'
+
+  const fechaNormalizada = typeof fecha === 'string' && fecha.includes('T') ? fecha.split('T')[0] : fecha
+  const [year, month, day] = String(fechaNormalizada).split('-').map(Number)
+  const fechaReserva =
+    year && month && day ? new Date(year, month - 1, day) : new Date(fechaNormalizada)
+
+  if (Number.isNaN(fechaReserva.getTime())) {
+    return 'Fecha no valida'
+  }
+
+  return fechaReserva.toLocaleDateString('es-ES', {
     weekday: 'short',
     year: 'numeric',
     month: 'short',
@@ -167,9 +179,38 @@ table select:focus {
   box-shadow: 0 0 0 0.25rem rgba(26, 54, 93, 0.25);
 }
 
-.badge {
-  padding: 0.5rem 0.75rem;
+.status-select {
+  min-width: 130px;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.45rem 2rem 0.45rem 0.85rem;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+.status-select option {
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+.status-pending {
+  background-color: #eef2f7;
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.status-confirmed {
+  background-color: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+}
+
+.status-canceled {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 </style>

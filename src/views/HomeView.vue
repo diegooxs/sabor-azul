@@ -463,7 +463,6 @@ onMounted(() => {
   z-index: 1;
 }
 
-/* Ajustes específicos para el segundo bloque (Postre) para asimetría inversa */
 @media (min-lg-width: 992px) {
   .order-lg-2 {
     order: 2;

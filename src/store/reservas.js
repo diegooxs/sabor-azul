@@ -18,10 +18,7 @@ export const estadoReservas = reactive({
         throw new Error(datos.message || 'No se pudo cargar las reservas')
       }
 
-      this.reservas = datos.map((reserva) => ({
-        ...reserva,
-        fecha: new Date(reserva.fecha).toLocaleDateString('es-ES'),
-      }))
+      this.reservas = datos
     } catch (error) {
       console.error('Error al cargar reservas:', error)
       this.error = 'No se pudo cargar las reservas desde el servidor'
@@ -52,10 +49,7 @@ export const estadoReservas = reactive({
         throw new Error(datos.error || datos.message || 'Error al crear la reserva')
       }
 
-      this.reservas.unshift({
-        ...datos,
-        fecha: new Date(datos.fecha).toLocaleDateString('es-ES'),
-      })
+      this.reservas.unshift(datos)
       return true
     } catch (error) {
       console.error('Error en crearReserva:', error)
@@ -83,10 +77,7 @@ export const estadoReservas = reactive({
 
       const indice = this.reservas.findIndex((r) => r.id === reservaEditada.id)
       if (indice !== -1) {
-        this.reservas[indice] = {
-          ...datos,
-          fecha: new Date(datos.fecha).toLocaleDateString('es-ES'),
-        }
+        this.reservas[indice] = datos
       }
       return true
     } catch (error) {
@@ -114,6 +105,35 @@ export const estadoReservas = reactive({
       return true
     } catch (error) {
       console.error('Error en eliminarReserva:', error)
+      this.error = error.message
+      throw error
+    } finally {
+      this.cargando = false
+    }
+  },
+
+  async actualizarEstado(id, estado) {
+    this.cargando = true
+    try {
+      const respuesta = await fetch(`${this.urlApi}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado }),
+      })
+
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok) {
+        throw new Error(datos.error || datos.message || 'No se pudo actualizar el estado')
+      }
+
+      const indice = this.reservas.findIndex((r) => r.id === id)
+      if (indice !== -1) {
+        this.reservas[indice] = datos
+      }
+      return true
+    } catch (error) {
+      console.error('Error en actualizarEstado:', error)
       this.error = error.message
       throw error
     } finally {

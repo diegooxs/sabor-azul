@@ -70,11 +70,10 @@ import { useRouter } from 'vue-router'
 import { datosUsuario } from '../store/usuario'
 
 const router = useRouter()
-const nombreUsuario = ref('') // Cambiado de emailLogin a nombreUsuario
+const nombreUsuario = ref('')
 const passwordLogin = ref('')
 
 const iniciarSesion = async () => {
-  // Enviamos nombreUsuario.value al store
   const resultado = await datosUsuario.iniciarSesion(nombreUsuario.value, passwordLogin.value)
 
   if (resultado.success) {
