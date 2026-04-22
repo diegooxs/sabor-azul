@@ -16,6 +16,11 @@
           </div>
 
           <div class="card-body p-4 p-md-5">
+            <div v-if="error" class="alert alert-danger alert-dismissible fade show" role="alert">
+              {{ error }}
+              <button type="button" class="btn-close" @click="error = ''"></button>
+            </div>
+
             <div v-if="!reservaExitosa">
               <p class="text-center text-muted mb-4">
                 Asegura tu lugar en Sabor Azul. Por favor, llena los detalles a continuación.
@@ -43,6 +48,18 @@
                     class="form-control p-2"
                     v-model="formulario.email"
                     required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-muted text-uppercase"
+                    >Teléfono</label
+                  >
+                  <input
+                    type="tel"
+                    class="form-control p-2"
+                    v-model="formulario.telefono"
+                    placeholder="+1 (555) 000-0000"
                   />
                 </div>
 
@@ -83,8 +100,9 @@
                   type="submit"
                   class="btn btn-dark w-100 py-3 rounded-pill fw-bold text-uppercase"
                   style="letter-spacing: 1px"
+                  :disabled="cargando"
                 >
-                  Confirmar Reserva
+                  {{ cargando ? 'Procesando...' : 'Confirmar Reserva' }}
                 </button>
               </form>
             </div>
@@ -117,28 +135,58 @@
 
 <script setup>
 import { ref, reactive } from 'vue'
+import { estadoReservas } from '../store/reservas'
 
 const reservaExitosa = ref(false)
+const cargando = ref(false)
+const error = ref('')
 
 const formulario = reactive({
   nombre: '',
   email: '',
+  telefono: '',
   fecha: '',
   hora: '',
   personas: '2',
 })
 
-const procesarReserva = () => {
-  reservaExitosa.value = true
+const procesarReserva = async () => {
+  if (!formulario.nombre || !formulario.email || !formulario.fecha || !formulario.hora) {
+    error.value = 'Por favor completa todos los campos'
+    return
+  }
+
+  cargando.value = true
+  error.value = ''
+
+  try {
+    await estadoReservas.crearReserva({
+      nombre: formulario.nombre.trim(),
+      email: formulario.email.trim(),
+      telefono: formulario.telefono.trim(),
+      fecha: formulario.fecha,
+      hora: formulario.hora,
+      personas: formulario.personas,
+    })
+
+    reservaExitosa.value = true
+  } catch (err) {
+    error.value = err.message || 'Error al procesar la reserva'
+    console.error('Error:', err)
+  } finally {
+    cargando.value = false
+  }
 }
 
 const nuevaReserva = () => {
   reservaExitosa.value = false
   formulario.nombre = ''
   formulario.email = ''
+  formulario.telefono = ''
   formulario.fecha = ''
   formulario.hora = ''
   formulario.personas = '2'
+  error.value = ''
 }
 </script>
 

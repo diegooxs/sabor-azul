@@ -202,6 +202,11 @@ onUnmounted(() => {
                   >
                 </li>
                 <li>
+                  <router-link class="dropdown-item text-primary fw-bold py-2" to="/admin/reservas"
+                    ><i class="bi bi-calendar-check me-2"></i>Gestión de Reservas</router-link
+                  >
+                </li>
+                <li>
                   <router-link class="dropdown-item text-primary fw-bold py-2" to="/admin/usuarios"
                     ><i class="bi bi-people-fill me-2"></i>Gestión de usuarios</router-link
                   >
