@@ -36,22 +36,35 @@ export const estadoMenu = reactive({
   },
 
   async agregarPlatillo(nuevoPlatillo) {
-    const respuesta = await fetch(this.urlApi, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...nuevoPlatillo,
-        precio: Number(nuevoPlatillo.precio),
-      }),
-    })
+    this.cargando = true
+    try {
+      const respuesta = await fetch(this.urlApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: nuevoPlatillo.nombre,
+          descripcion: nuevoPlatillo.descripcion,
+          precio: Number(nuevoPlatillo.precio),
+          imagen: nuevoPlatillo.imagen,
+          categoria_id: parseInt(nuevoPlatillo.categoria_id),
+        }),
+      })
 
-    const datos = await respuesta.json()
+      const datos = await respuesta.json()
 
-    if (!respuesta.ok) {
-      throw new Error(datos.message || 'No se pudo crear el platillo')
+      if (!respuesta.ok) {
+        throw new Error(datos.error || datos.message || 'Error al crear el platillo')
+      }
+
+      this.platillos.push(this.normalizarPlatillo(datos))
+      return true // Éxito
+    } catch (error) {
+      console.error('Error en agregarPlatillo:', error)
+      this.error = error.message
+      throw error
+    } finally {
+      this.cargando = false
     }
-
-    this.platillos.push(this.normalizarPlatillo(datos))
   },
 
   async editarPlatillo(platilloEditado) {
