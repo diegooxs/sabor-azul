@@ -57,8 +57,74 @@
         </form>
 
         <div class="mt-4 pt-3 border-top">
-          <a href="#" class="text-muted text-decoration-none small">¿Olvidaste tu contraseña?</a>
+          <button
+            type="button"
+            class="btn btn-link text-muted text-decoration-none small p-0"
+            @click="mostrarRecuperacion = !mostrarRecuperacion"
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
         </div>
+
+        <form
+          v-if="mostrarRecuperacion"
+          class="password-reset mt-4 text-start"
+          @submit.prevent="recuperarPassword"
+        >
+          <p class="text-muted small mb-3 text-center">
+            Escribe tu usuario y crea una nueva contraseña.
+          </p>
+
+          <div class="form-floating mb-3">
+            <input
+              type="text"
+              class="form-control rounded-3"
+              id="resetUserInput"
+              v-model="usuarioRecuperacion"
+              placeholder="Usuario"
+              required
+            />
+            <label for="resetUserInput" class="text-muted">Usuario</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input
+              type="password"
+              class="form-control rounded-3"
+              id="resetPasswordInput"
+              v-model="nuevaPassword"
+              placeholder="Nueva contraseña"
+              minlength="6"
+              required
+            />
+            <label for="resetPasswordInput" class="text-muted">Nueva contraseña</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input
+              type="password"
+              class="form-control rounded-3"
+              id="confirmPasswordInput"
+              v-model="confirmarPassword"
+              placeholder="Confirmar contraseña"
+              minlength="6"
+              required
+            />
+            <label for="confirmPasswordInput" class="text-muted">Confirmar contraseña</label>
+          </div>
+
+          <div v-if="mensajeRecuperacion" :class="['small text-center mb-3', mensajeClase]">
+            {{ mensajeRecuperacion }}
+          </div>
+
+          <button
+            type="submit"
+            class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold"
+            :disabled="recuperando"
+          >
+            {{ recuperando ? 'Actualizando...' : 'Actualizar contraseña' }}
+          </button>
+        </form>
       </div>
     </div>
   </div>
@@ -72,6 +138,13 @@ import { datosUsuario } from '../store/usuario'
 const router = useRouter()
 const nombreUsuario = ref('')
 const passwordLogin = ref('')
+const mostrarRecuperacion = ref(false)
+const usuarioRecuperacion = ref('')
+const nuevaPassword = ref('')
+const confirmarPassword = ref('')
+const mensajeRecuperacion = ref('')
+const mensajeClase = ref('text-muted')
+const recuperando = ref(false)
 
 const iniciarSesion = async () => {
   const resultado = await datosUsuario.iniciarSesion(nombreUsuario.value, passwordLogin.value)
@@ -86,6 +159,39 @@ const iniciarSesion = async () => {
     passwordLogin.value = ''
   }
 }
+
+const limpiarRecuperacion = () => {
+  nuevaPassword.value = ''
+  confirmarPassword.value = ''
+}
+
+const recuperarPassword = async () => {
+  mensajeRecuperacion.value = ''
+
+  if (nuevaPassword.value !== confirmarPassword.value) {
+    mensajeClase.value = 'text-danger'
+    mensajeRecuperacion.value = 'Las contraseñas no coinciden'
+    return
+  }
+
+  recuperando.value = true
+  const resultado = await datosUsuario.recuperarPassword(
+    usuarioRecuperacion.value,
+    nuevaPassword.value,
+  )
+  recuperando.value = false
+
+  if (resultado.success) {
+    mensajeClase.value = 'text-success'
+    mensajeRecuperacion.value = 'Contraseña actualizada. Ya puedes iniciar sesión.'
+    nombreUsuario.value = usuarioRecuperacion.value
+    passwordLogin.value = ''
+    limpiarRecuperacion()
+  } else {
+    mensajeClase.value = 'text-danger'
+    mensajeRecuperacion.value = resultado.message
+  }
+}
 </script>
 
 <style scoped>
@@ -98,5 +204,12 @@ const iniciarSesion = async () => {
 .form-control:focus {
   border-color: #0f172a;
   box-shadow: 0 0 0 0.25rem rgba(15, 23, 42, 0.25);
+}
+
+.password-reset {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem;
 }
 </style>

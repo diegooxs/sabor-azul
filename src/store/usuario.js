@@ -40,6 +40,27 @@ export const datosUsuario = reactive({
     }
   },
 
+  async recuperarPassword(username, nuevaPassword) {
+    try {
+      const respuesta = await fetch(`${this.urlApi}/recuperar-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, nuevaPassword }),
+      })
+
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok) {
+        throw new Error(datos.message || datos.error || 'No se pudo actualizar la contraseña')
+      }
+
+      return { success: true, message: datos.message }
+    } catch (error) {
+      console.error('Error al recuperar contraseña:', error)
+      return { success: false, message: error.message }
+    }
+  },
+
   cerrarSesion() {
     this.nombre = 'Invitado'
     this.rol = 'invitado'
