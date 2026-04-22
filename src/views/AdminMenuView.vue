@@ -61,6 +61,7 @@
                       <option value="Pastas">Pastas</option>
                       <option value="Postres">Postres</option>
                       <option value="Especiales">Especiales</option>
+                      <option value="Bebidas">Bebidas</option>
                     </select>
                   </div>
                   <div class="col-6">
@@ -108,8 +109,15 @@
                   :class="modoEdicion ? 'btn-warning text-dark' : 'btn-primary'"
                   class="btn w-100 fw-bold py-2 rounded-3 text-uppercase mb-2"
                   style="letter-spacing: 1px"
+                  :disabled="guardando"
                 >
-                  {{ modoEdicion ? 'Guardar Cambios' : 'Agregar a Galería' }}
+                  {{
+                    guardando
+                      ? 'Guardando...'
+                      : modoEdicion
+                        ? 'Guardar Cambios'
+                        : 'Agregar a Galería'
+                  }}
                 </button>
 
                 <button
@@ -134,7 +142,21 @@
               </h5>
             </div>
             <div class="card-body p-0">
-              <div class="table-responsive">
+              <div v-if="estadoMenu.cargando" class="text-center py-5">
+                <div class="spinner-border color-primary" role="status"></div>
+                <p class="text-muted mb-0 mt-3">Cargando platillos...</p>
+              </div>
+
+              <div v-else-if="estadoMenu.error" class="text-center py-5 px-4">
+                <i class="bi bi-exclamation-triangle fs-1 text-warning d-block mb-3"></i>
+                <h5 class="fw-bold color-primary">No se pudo cargar el menú</h5>
+                <p class="text-muted">{{ estadoMenu.error }}</p>
+                <button class="btn btn-dark rounded-pill px-4" @click="estadoMenu.cargarPlatillos()">
+                  Reintentar
+                </button>
+              </div>
+
+              <div v-else class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                   <thead class="table-light">
                     <tr>
@@ -178,7 +200,7 @@
                           <i class="bi bi-pencil-fill"></i>
                         </button>
                         <button
-                          @click="estadoMenu.eliminarPlatillo(platillo.id)"
+                          @click="eliminarPlatillo(platillo.id)"
                           class="btn btn-sm btn-outline-danger rounded-circle p-2"
                           title="Eliminar Platillo"
                         >
@@ -198,12 +220,13 @@
 </template>
 
 <script setup>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { estadoMenu } from '../store/menu'
 
 // Variables
 const modoEdicion = ref(false)
 const idEditando = ref(null)
+const guardando = ref(false)
 
 const formulario = reactive({
   nombre: '',
@@ -230,13 +253,33 @@ const cancelarEdicion = () => {
   limpiarFormulario()
 }
 
-const guardarPlatillo = () => {
-  if (modoEdicion.value) {
-    estadoMenu.editarPlatillo({ ...formulario, id: idEditando.value })
-    cancelarEdicion() // Apagamos el modo edición
-  } else {
-    estadoMenu.agregarPlatillo({ ...formulario })
-    limpiarFormulario()
+const guardarPlatillo = async () => {
+  guardando.value = true
+
+  try {
+    if (modoEdicion.value) {
+      await estadoMenu.editarPlatillo({ ...formulario, id: idEditando.value })
+      cancelarEdicion()
+    } else {
+      await estadoMenu.agregarPlatillo({ ...formulario })
+      limpiarFormulario()
+    }
+  } catch (error) {
+    console.error('Error al guardar platillo:', error)
+    alert(error.message)
+  } finally {
+    guardando.value = false
+  }
+}
+
+const eliminarPlatillo = async (id) => {
+  if (!confirm('¿Estás seguro de eliminar este platillo?')) return
+
+  try {
+    await estadoMenu.eliminarPlatillo(id)
+  } catch (error) {
+    console.error('Error al eliminar platillo:', error)
+    alert(error.message)
   }
 }
 
@@ -247,6 +290,10 @@ const limpiarFormulario = () => {
   formulario.imagen = ''
   formulario.categoria = ''
 }
+
+onMounted(() => {
+  estadoMenu.cargarPlatillos()
+})
 </script>
 
 <style scoped>

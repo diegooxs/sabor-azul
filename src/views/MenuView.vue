@@ -80,7 +80,24 @@
       </div>
     </div>
 
-    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-5">
+    <div v-if="estadoMenu.cargando" class="text-center py-5 my-5">
+      <div class="spinner-border color-primary" role="status"></div>
+      <p class="text-muted mb-0 mt-3">Cargando menú...</p>
+    </div>
+
+    <div v-else-if="estadoMenu.error" class="text-center py-5 my-5">
+      <i class="bi bi-exclamation-triangle fs-1 text-warning d-block mb-3"></i>
+      <h4 class="fw-bold color-primary">No se pudo cargar el menú</h4>
+      <p class="text-muted">{{ estadoMenu.error }}</p>
+      <button class="btn btn-dark rounded-pill px-4 mt-2" @click="estadoMenu.cargarPlatillos()">
+        Reintentar
+      </button>
+    </div>
+
+    <div
+      v-else
+      class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4 mb-5"
+    >
       <div class="col" v-for="platillo in platillosFiltrados" :key="platillo.id">
         <div
           class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden tarjeta-animada bg-white"
@@ -114,7 +131,10 @@
       </div>
     </div>
 
-    <div v-if="platillosFiltrados.length === 0" class="text-center py-5 my-5">
+    <div
+      v-if="!estadoMenu.cargando && !estadoMenu.error && platillosFiltrados.length === 0"
+      class="text-center py-5 my-5"
+    >
       <i class="bi bi-search fs-1 text-muted d-block mb-3 opacity-25"></i>
       <h4 class="text-muted fw-bold">No encontramos resultados</h4>
       <p class="text-muted-50">Intenta buscar con otra palabra o cambia la categoría.</p>
@@ -126,7 +146,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { estadoMenu } from '../store/menu'
 import { estadoCarrito } from '../store/carrito'
 
@@ -154,6 +174,10 @@ const platillosFiltrados = computed(() => {
 
     return coincideCategoria && coincideTexto
   })
+})
+
+onMounted(() => {
+  estadoMenu.cargarPlatillos()
 })
 </script>
 
