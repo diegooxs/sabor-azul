@@ -2,15 +2,40 @@ import { reactive } from 'vue'
 
 export const estadoMenu = reactive({
   urlApi: 'https://backend-sabor-azul.onrender.com/api/platillos',
+  urlCategorias: 'https://backend-sabor-azul.onrender.com/api/categorias',
   cargando: false,
   error: '',
   platillos: [],
+  categorias: [],
+  mapaCategoriasId: {}, // id -> nombre
 
   normalizarPlatillo(platillo) {
     return {
       ...platillo,
       precio: Number(platillo.precio) || 0,
+      categoria_id: platillo.categoria_id,
       categoria: platillo.categoria?.nombre || platillo.categoria || 'Sin Categoría',
+    }
+  },
+
+  async cargarCategorias() {
+    try {
+      const respuesta = await fetch(this.urlCategorias)
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok) {
+        throw new Error(datos.message || 'No se pudo cargar las categorías')
+      }
+
+      this.categorias = datos
+      // Crear mapa para búsqueda rápida de nombres por ID
+      this.mapaCategoriasId = {}
+      datos.forEach(cat => {
+        this.mapaCategoriasId[cat.id] = cat.nombre
+      })
+    } catch (error) {
+      console.error('Error al cargar categorías:', error)
+      this.error = 'No se pudo cargar las categorías'
     }
   },
 
@@ -72,8 +97,11 @@ export const estadoMenu = reactive({
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...platilloEditado,
+        nombre: platilloEditado.nombre,
+        descripcion: platilloEditado.descripcion,
         precio: Number(platilloEditado.precio),
+        imagen: platilloEditado.imagen,
+        categoria_id: Number(platilloEditado.categoria_id),
       }),
     })
 

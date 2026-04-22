@@ -52,16 +52,13 @@
                     >
                     <select
                       class="form-select bg-dark border-secondary text-white custom-input"
-                      v-model="formulario.categoria"
+                      v-model.number="formulario.categoria_id"
                       required
                     >
                       <option value="" disabled>Elegir...</option>
-                      <option value="Entradas">Entradas</option>
-                      <option value="Plato Fuerte">Plato Fuerte</option>
-                      <option value="Pastas">Pastas</option>
-                      <option value="Postres">Postres</option>
-                      <option value="Especiales">Especiales</option>
-                      <option value="Bebidas">Bebidas</option>
+                      <option v-for="cat in estadoMenu.categorias" :key="cat.id" :value="cat.id">
+                        {{ cat.nombre }}
+                      </option>
                     </select>
                   </div>
                   <div class="col-6">
@@ -233,7 +230,7 @@ const formulario = reactive({
   descripcion: '',
   precio: '',
   imagen: '',
-  categoria: '',
+  categoria_id: '',
 })
 
 const prepararEdicion = (platillo) => {
@@ -244,7 +241,8 @@ const prepararEdicion = (platillo) => {
   formulario.descripcion = platillo.descripcion
   formulario.precio = platillo.precio
   formulario.imagen = platillo.imagen
-  formulario.categoria = platillo.categoria
+  // Usar categoria_id directamente si está disponible, sino buscar por nombre
+  formulario.categoria_id = platillo.categoria_id || (estadoMenu.categorias.find(c => c.nombre === platillo.categoria)?.id || '')
 }
 
 const cancelarEdicion = () => {
@@ -288,10 +286,11 @@ const limpiarFormulario = () => {
   formulario.descripcion = ''
   formulario.precio = ''
   formulario.imagen = ''
-  formulario.categoria = ''
+  formulario.categoria_id = ''
 }
 
 onMounted(() => {
+  estadoMenu.cargarCategorias()
   estadoMenu.cargarPlatillos()
 })
 </script>
