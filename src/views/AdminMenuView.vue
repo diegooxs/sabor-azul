@@ -3,13 +3,40 @@
     <div class="container">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 class="fw-bold color-primary mb-0">Galería de Platillos</h2>
-          <p class="text-muted small">Administra las imágenes y detalles de tu menú</p>
+          <h2 class="fw-bold color-primary mb-0">Panel de Administración</h2>
+          <p class="text-muted small">Administra el menú, pedidos, reservas y mensajes de clientes</p>
         </div>
         <div class="text-end">
           <span class="badge bg-dark py-2 px-3 shadow-sm"
             ><i class="bi bi-shield-lock me-2"></i>Modo Administrador</span
           >
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+          <router-link to="/admin/pedidos" class="admin-access-card">
+            <i class="bi bi-list-check"></i>
+            <span>Pedidos</span>
+          </router-link>
+        </div>
+        <div class="col-6 col-lg-3">
+          <router-link to="/admin/reservas" class="admin-access-card">
+            <i class="bi bi-calendar-check"></i>
+            <span>Reservas</span>
+          </router-link>
+        </div>
+        <div class="col-6 col-lg-3">
+          <router-link to="/admin/contacto" class="admin-access-card">
+            <i class="bi bi-envelope-paper"></i>
+            <span>Mensajes</span>
+          </router-link>
+        </div>
+        <div class="col-6 col-lg-3">
+          <router-link to="/admin/usuarios" class="admin-access-card">
+            <i class="bi bi-people"></i>
+            <span>Usuarios</span>
+          </router-link>
         </div>
       </div>
 
@@ -299,6 +326,38 @@ onMounted(() => {
 .color-primary {
   color: #1a365d;
 }
+
+.admin-access-card {
+  min-height: 86px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #1a365d;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 0.25rem 0.75rem rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.admin-access-card i {
+  font-size: 1.45rem;
+}
+
+.admin-access-card:hover,
+.admin-access-card.router-link-active {
+  color: #0f172a;
+  border-color: #1a365d;
+  box-shadow: 0 0.65rem 1.2rem rgba(15, 23, 42, 0.12);
+  transform: translateY(-2px);
+}
+
 .custom-input:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
