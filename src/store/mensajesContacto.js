@@ -1,7 +1,8 @@
 import { reactive } from 'vue'
+import { buildApiUrl } from '../config/api'
 
 export const estadoMensajesContacto = reactive({
-  urlApi: 'https://backend-sabor-azul.onrender.com/api/mensajes-contacto',
+  urlApi: buildApiUrl('/mensajes-contacto'),
   cargando: false,
   error: '',
   mensajes: [],

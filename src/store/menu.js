@@ -1,8 +1,9 @@
 import { reactive } from 'vue'
+import { buildApiUrl } from '../config/api'
 
 export const estadoMenu = reactive({
-  urlApi: 'https://backend-sabor-azul.onrender.com/api/platillos',
-  urlCategorias: 'https://backend-sabor-azul.onrender.com/api/categorias',
+  urlApi: buildApiUrl('/platillos'),
+  urlCategorias: buildApiUrl('/categorias'),
   cargando: false,
   error: '',
   platillos: [],

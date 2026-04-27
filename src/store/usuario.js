@@ -1,4 +1,5 @@
 import { reactive } from 'vue'
+import { API_BASE_URL, buildApiUrl } from '../config/api'
 
 export const datosUsuario = reactive({
   id: null,
@@ -8,11 +9,11 @@ export const datosUsuario = reactive({
   telefono: '',
   foto: 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff',
   rol: 'invitado',
-  urlApi: 'https://backend-sabor-azul.onrender.com/api',
+  urlApi: API_BASE_URL,
 
   async iniciarSesion(username, password) {
     try {
-      const respuesta = await fetch(`${this.urlApi}/login`, {
+      const respuesta = await fetch(buildApiUrl('/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -41,7 +42,7 @@ export const datosUsuario = reactive({
 
   async recuperarPassword(username, nuevaPassword) {
     try {
-      const respuesta = await fetch(`${this.urlApi}/recuperar-password`, {
+      const respuesta = await fetch(buildApiUrl('/recuperar-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, nuevaPassword }),

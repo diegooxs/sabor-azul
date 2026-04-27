@@ -75,11 +75,12 @@
 </template>
 
 <script>
+import { buildApiUrl } from '../config/api'
+
 export default {
   data() {
     return {
-      //urlApi: 'http://10.20.130.143:8000/api/usuarios',
-      urlApi: 'https://backend-sabor-azul.onrender.com/api/usuarios',
+      urlApi: buildApiUrl('/usuarios'),
       usuarios: [],
       editando: false,
       form: { id: null, username: '', password: '', rol: 'cliente' },

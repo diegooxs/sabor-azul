@@ -25,6 +25,20 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+## Variables de entorno
+
+En desarrollo local puedes usar un archivo `.env.local` con:
+
+```sh
+VITE_API_URL=http://localhost:3000/api
+```
+
+En Vercel debes configurar esta variable:
+
+```sh
+VITE_API_URL=https://backend-sabor-azul.onrender.com/api
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh
