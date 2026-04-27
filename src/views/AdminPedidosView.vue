@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { estadoPedidos } from '../store/pedidos'
 
 const totalPedidos = computed(() => estadoPedidos.items.length)
@@ -23,6 +23,39 @@ const clasesEstado = {
   Entregado: 'bg-success-subtle text-success-emphasis',
   Cancelado: 'bg-danger-subtle text-danger-emphasis',
 }
+
+const cargarPedidos = async () => {
+  try {
+    await estadoPedidos.cargarPedidos()
+  } catch (error) {
+    console.error('Error al cargar pedidos:', error)
+  }
+}
+
+const actualizarEstado = async (id, nuevoEstado) => {
+  try {
+    await estadoPedidos.actualizarEstado(id, nuevoEstado)
+  } catch (error) {
+    console.error('Error al actualizar pedido:', error)
+    alert(error.message || 'No se pudo actualizar el pedido')
+    await cargarPedidos()
+  }
+}
+
+const eliminarPedido = async (id) => {
+  if (!confirm('¿Estás seguro de eliminar este pedido?')) return
+
+  try {
+    await estadoPedidos.eliminarPedido(id)
+  } catch (error) {
+    console.error('Error al eliminar pedido:', error)
+    alert(error.message || 'No se pudo eliminar el pedido')
+  }
+}
+
+onMounted(() => {
+  cargarPedidos()
+})
 </script>
 
 <template>
@@ -33,9 +66,14 @@ const clasesEstado = {
           <h2 class="fw-bold color-primary mb-1">Pedidos Recibidos</h2>
           <p class="text-muted mb-0">Consulta y administra las órdenes confirmadas desde el carrito.</p>
         </div>
-        <span class="badge bg-dark py-2 px-3 shadow-sm">
-          <i class="bi bi-receipt-cutoff me-2"></i>{{ totalPedidos }} pedidos registrados
-        </span>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button class="btn btn-outline-dark rounded-pill px-3" @click="cargarPedidos">
+            <i class="bi bi-arrow-clockwise me-2"></i>Actualizar
+          </button>
+          <span class="badge bg-dark py-2 px-3 shadow-sm">
+            <i class="bi bi-receipt-cutoff me-2"></i>{{ totalPedidos }} pedidos registrados
+          </span>
+        </div>
       </div>
 
       <div class="row g-3 mb-4">
@@ -65,7 +103,23 @@ const clasesEstado = {
         </div>
       </div>
 
-      <div v-if="estadoPedidos.items.length === 0" class="card border-0 shadow-sm rounded-4">
+      <div v-if="estadoPedidos.cargando" class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+          <div class="spinner-border color-primary" role="status"></div>
+          <p class="text-muted mb-0 mt-3">Cargando pedidos...</p>
+        </div>
+      </div>
+
+      <div v-else-if="estadoPedidos.error" class="card border-0 shadow-sm rounded-4">
+        <div class="card-body text-center py-5">
+          <i class="bi bi-exclamation-triangle fs-1 text-warning d-block mb-3"></i>
+          <h4 class="fw-bold color-primary">No se pudieron cargar los pedidos</h4>
+          <p class="text-muted mb-3">{{ estadoPedidos.error }}</p>
+          <button class="btn btn-dark rounded-pill px-4" @click="cargarPedidos">Reintentar</button>
+        </div>
+      </div>
+
+      <div v-else-if="estadoPedidos.items.length === 0" class="card border-0 shadow-sm rounded-4">
         <div class="card-body text-center py-5">
           <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
           <h4 class="fw-bold color-primary">Todavía no hay pedidos</h4>
@@ -96,7 +150,7 @@ const clasesEstado = {
                     class="form-select"
                     style="min-width: 180px"
                     :value="pedido.estado"
-                    @change="estadoPedidos.actualizarEstado(pedido.id, $event.target.value)"
+                    @change="actualizarEstado(pedido.id, $event.target.value)"
                   >
                     <option value="Pendiente">Pendiente</option>
                     <option value="Preparando">Preparando</option>
@@ -105,7 +159,7 @@ const clasesEstado = {
                   </select>
                   <button
                     class="btn btn-outline-danger"
-                    @click="estadoPedidos.eliminarPedido(pedido.id)"
+                    @click="eliminarPedido(pedido.id)"
                   >
                     <i class="bi bi-trash3 me-2"></i>Eliminar
                   </button>

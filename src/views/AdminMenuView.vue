@@ -4,7 +4,9 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 class="fw-bold color-primary mb-0">Panel de Administración</h2>
-          <p class="text-muted small">Administra el menú, pedidos, reservas y mensajes de clientes</p>
+          <p class="text-muted small">
+            Administra el menú, pedidos, reservas y mensajes de clientes
+          </p>
         </div>
         <div class="text-end">
           <span class="badge bg-dark py-2 px-3 shadow-sm"
@@ -175,7 +177,10 @@
                 <i class="bi bi-exclamation-triangle fs-1 text-warning d-block mb-3"></i>
                 <h5 class="fw-bold color-primary">No se pudo cargar el menú</h5>
                 <p class="text-muted">{{ estadoMenu.error }}</p>
-                <button class="btn btn-dark rounded-pill px-4" @click="estadoMenu.cargarPlatillos()">
+                <button
+                  class="btn btn-dark rounded-pill px-4"
+                  @click="estadoMenu.cargarPlatillos()"
+                >
                   Reintentar
                 </button>
               </div>
@@ -247,7 +252,6 @@
 import { onMounted, reactive, ref } from 'vue'
 import { estadoMenu } from '../store/menu'
 
-// Variables
 const modoEdicion = ref(false)
 const idEditando = ref(null)
 const guardando = ref(false)
@@ -268,8 +272,10 @@ const prepararEdicion = (platillo) => {
   formulario.descripcion = platillo.descripcion
   formulario.precio = platillo.precio
   formulario.imagen = platillo.imagen
-  // Usar categoria_id directamente si está disponible, sino buscar por nombre
-  formulario.categoria_id = platillo.categoria_id || (estadoMenu.categorias.find(c => c.nombre === platillo.categoria)?.id || '')
+  formulario.categoria_id =
+    platillo.categoria_id ||
+    estadoMenu.categorias.find((c) => c.nombre === platillo.categoria)?.id ||
+    ''
 }
 
 const cancelarEdicion = () => {

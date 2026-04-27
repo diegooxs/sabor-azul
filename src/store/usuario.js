@@ -1,15 +1,13 @@
 import { reactive } from 'vue'
 
 export const datosUsuario = reactive({
+  id: null,
   nombre: 'Invitado',
   apellido: '',
   email: '',
   telefono: '',
   foto: 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff',
   rol: 'invitado',
-
-  //urlApi: 'http://10.20.130.143:8000/api',x
-  // Asegúrate de que tenga el "/usuarios" al final
   urlApi: 'https://backend-sabor-azul.onrender.com/api',
 
   async iniciarSesion(username, password) {
@@ -23,6 +21,7 @@ export const datosUsuario = reactive({
       const datos = await respuesta.json()
 
       if (respuesta.ok) {
+        this.id = datos.id ?? null
         this.nombre = datos.username
         this.rol = datos.rol
         this.email = username
@@ -62,9 +61,20 @@ export const datosUsuario = reactive({
   },
 
   cerrarSesion() {
+    this.id = null
     this.nombre = 'Invitado'
     this.rol = 'invitado'
     this.email = ''
     this.foto = 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff'
+  },
+
+  actualizarPerfil({ nombre, apellido, email, telefono }) {
+    this.nombre = nombre?.trim() || this.nombre
+    this.apellido = apellido?.trim() || ''
+    this.email = email?.trim() || ''
+    this.telefono = telefono?.trim() || ''
+
+    const nombreCompleto = [this.nombre, this.apellido].filter(Boolean).join(' ')
+    this.foto = `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreCompleto || this.nombre)}&background=1a365d&color=fff`
   },
 })

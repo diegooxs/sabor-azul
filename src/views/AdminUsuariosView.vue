@@ -79,7 +79,6 @@ export default {
   data() {
     return {
       //urlApi: 'http://10.20.130.143:8000/api/usuarios',
-      // Asegúrate de que tenga el "/usuarios" al final
       urlApi: 'https://backend-sabor-azul.onrender.com/api/usuarios',
       usuarios: [],
       editando: false,
@@ -103,7 +102,7 @@ export default {
         const url = this.editando ? `${this.urlApi}/${this.form.id}` : this.urlApi
 
         await fetch(url, {
-          method: 'POST', // Tu backend usa POST incluso para actualizar y crear
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(this.form),
         })

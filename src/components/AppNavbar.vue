@@ -14,16 +14,21 @@ const mostrarToastCarrito = ref(false)
 const productoToast = ref('')
 const mostrarCarritoFlotante = ref(false)
 const animarContador = ref(false)
+const errorPago = ref('')
 
 let timeoutToast
 let timeoutContador
 
-const procesarPagoMock = () => {
+const procesarPagoMock = async () => {
   procesando.value = true
+  errorPago.value = ''
 
-  setTimeout(() => {
-    estadoPedidos.crearPedido({
+  try {
+    await new Promise((resolve) => window.setTimeout(resolve, 1200))
+
+    await estadoPedidos.crearPedido({
       cliente: datosUsuario.nombre,
+      user_id: datosUsuario.id,
       total: estadoCarrito.totalPrecio,
       productos: estadoCarrito.items.map((item) => ({
         id: item.id,
@@ -33,13 +38,18 @@ const procesarPagoMock = () => {
       })),
     })
 
-    procesando.value = false
     pagoExitoso.value = true
     estadoCarrito.vaciar()
-  }, 2500)
+  } catch (error) {
+    console.error('Error al procesar el pedido:', error)
+    errorPago.value = error.message || 'No se pudo registrar el pedido. Intenta nuevamente.'
+  } finally {
+    procesando.value = false
+  }
 }
 
 const resetearModal = () => {
+  errorPago.value = ''
   setTimeout(() => {
     pagoExitoso.value = false
   }, 500)
@@ -374,6 +384,10 @@ onUnmounted(() => {
           </p>
 
           <form @submit.prevent="procesarPagoMock">
+            <div v-if="errorPago" class="alert alert-danger py-2" role="alert">
+              {{ errorPago }}
+            </div>
+
             <div class="mb-3">
               <label class="form-label small text-muted fw-bold text-uppercase"
                 >Número de Tarjeta
@@ -427,7 +441,7 @@ onUnmounted(() => {
                   role="status"
                   aria-hidden="true"
                 ></span>
-                Procesando conexión...
+                Registrando pedido...
               </span>
             </button>
           </form>
