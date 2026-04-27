@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
+import { datosUsuario } from '@/store/usuario'
 
 // Importaciones de Vistas
 import HomeView from '@/views/HomeView.vue'
@@ -44,11 +45,13 @@ const routes = [
     path: '/perfil',
     name: 'perfil',
     component: PerfilView,
+    meta: { requiereAuth: true },
   },
   {
     path: '/admin',
     name: 'adminMenu',
     component: AdminMenuView,
+    meta: { requiereAdmin: true },
   },
   {
     path: '/galeria',
@@ -59,27 +62,48 @@ const routes = [
     path: '/admin/usuarios',
     name: 'admin-usuarios',
     component: AdminUsuariosView,
+    meta: { requiereAdmin: true },
   },
   {
     path: '/admin/pedidos',
     name: 'admin-pedidos',
     component: AdminPedidosView,
+    meta: { requiereAdmin: true },
   },
   {
     path: '/admin/reservas',
     name: 'admin-reservas',
     component: AdminReservasView,
+    meta: { requiereAdmin: true },
   },
   {
     path: '/admin/contacto',
     name: 'admin-contacto',
     component: AdminContactoView,
+    meta: { requiereAdmin: true },
   },
 ]
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+})
+
+router.beforeEach((to) => {
+  const requiereAdmin = to.matched.some((record) => record.meta.requiereAdmin)
+  const requiereAuth = to.matched.some((record) => record.meta.requiereAuth)
+
+  if (requiereAdmin && datosUsuario.rol !== 'admin') {
+    return datosUsuario.estaAutenticado ? '/' : '/login'
+  }
+
+  if (requiereAuth && !datosUsuario.estaAutenticado) {
+    return '/login'
+  }
+
+  if (to.path === '/login' && datosUsuario.estaAutenticado) {
+    return datosUsuario.rol === 'admin' ? '/admin' : '/'
+  }
 })
 
 export default router

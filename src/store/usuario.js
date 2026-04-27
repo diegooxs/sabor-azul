@@ -1,7 +1,9 @@
 import { reactive } from 'vue'
 import { API_BASE_URL, buildApiUrl } from '../config/api'
 
-export const datosUsuario = reactive({
+const STORAGE_KEY = 'sabor-azul-usuario'
+
+const estadoInicial = {
   id: null,
   nombre: 'Invitado',
   apellido: '',
@@ -9,7 +11,66 @@ export const datosUsuario = reactive({
   telefono: '',
   foto: 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff',
   rol: 'invitado',
+}
+
+const leerSesionGuardada = () => {
+  if (typeof window === 'undefined') return { ...estadoInicial }
+
+  try {
+    const sesion = window.localStorage.getItem(STORAGE_KEY)
+
+    if (!sesion) {
+      return { ...estadoInicial }
+    }
+
+    return {
+      ...estadoInicial,
+      ...JSON.parse(sesion),
+    }
+  } catch (error) {
+    console.error('No se pudo restaurar la sesión guardada:', error)
+    return { ...estadoInicial }
+  }
+}
+
+const guardarSesion = (usuario) => {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido,
+      email: usuario.email,
+      telefono: usuario.telefono,
+      foto: usuario.foto,
+      rol: usuario.rol,
+    }),
+  )
+}
+
+const limpiarSesionGuardada = () => {
+  if (typeof window === 'undefined') return
+
+  window.localStorage.removeItem(STORAGE_KEY)
+}
+
+const sesionInicial = leerSesionGuardada()
+
+export const datosUsuario = reactive({
+  id: sesionInicial.id,
+  nombre: sesionInicial.nombre,
+  apellido: sesionInicial.apellido,
+  email: sesionInicial.email,
+  telefono: sesionInicial.telefono,
+  foto: sesionInicial.foto,
+  rol: sesionInicial.rol,
   urlApi: API_BASE_URL,
+
+  get estaAutenticado() {
+    return this.rol !== 'invitado'
+  },
 
   async iniciarSesion(username, password) {
     try {
@@ -27,6 +88,7 @@ export const datosUsuario = reactive({
         this.rol = datos.rol
         this.email = username
         this.foto = `https://ui-avatars.com/api/?name=${datos.username}&background=1a365d&color=fff`
+        guardarSesion(this)
 
         return { success: true }
       } else {
@@ -62,11 +124,8 @@ export const datosUsuario = reactive({
   },
 
   cerrarSesion() {
-    this.id = null
-    this.nombre = 'Invitado'
-    this.rol = 'invitado'
-    this.email = ''
-    this.foto = 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff'
+    Object.assign(this, estadoInicial)
+    limpiarSesionGuardada()
   },
 
   actualizarPerfil({ nombre, apellido, email, telefono }) {
@@ -77,5 +136,6 @@ export const datosUsuario = reactive({
 
     const nombreCompleto = [this.nombre, this.apellido].filter(Boolean).join(' ')
     this.foto = `https://ui-avatars.com/api/?name=${encodeURIComponent(nombreCompleto || this.nombre)}&background=1a365d&color=fff`
+    guardarSesion(this)
   },
 })
