@@ -29,9 +29,8 @@ export const estadoMenu = reactive({
       }
 
       this.categorias = datos
-      // Crear mapa para búsqueda rápida de nombres por ID
       this.mapaCategoriasId = {}
-      datos.forEach(cat => {
+      datos.forEach((cat) => {
         this.mapaCategoriasId[cat.id] = cat.nombre
       })
     } catch (error) {
@@ -83,7 +82,7 @@ export const estadoMenu = reactive({
       }
 
       this.platillos.push(this.normalizarPlatillo(datos))
-      return true // Éxito
+      return true 
     } catch (error) {
       console.error('Error en agregarPlatillo:', error)
       this.error = error.message

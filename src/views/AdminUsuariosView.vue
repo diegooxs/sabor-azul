@@ -119,7 +119,7 @@ export default {
       this.editando = true
       this.form.id = user.id
       this.form.username = user.username
-      this.form.password = '' // Se deja en blanco por seguridad
+      this.form.password = '' 
       this.form.rol = user.rol
     },
     cancelarEdicion() {
