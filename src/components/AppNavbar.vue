@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { buildApiUrl } from '../config/api'
 import { estadoCarrito } from '../store/carrito'
 import { estadoPedidos } from '../store/pedidos'
 import { datosUsuario } from '../store/usuario'
@@ -15,29 +16,69 @@ const productoToast = ref('')
 const mostrarCarritoFlotante = ref(false)
 const animarContador = ref(false)
 const errorPago = ref('')
+const mensajePago = ref('')
+const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || ''
 
 let timeoutToast
 let timeoutContador
 
-const procesarPagoMock = async () => {
+const obtenerProductosPedido = () =>
+  estadoCarrito.items.map((item) => ({
+    id: item.id,
+    nombre: item.nombre,
+    precio: item.precio,
+    cantidad: item.cantidad,
+  }))
+
+const registrarPedidoActual = async () => {
+  return estadoPedidos.crearPedido({
+    cliente: datosUsuario.nombre,
+    user_id: datosUsuario.id,
+    total: estadoCarrito.totalPrecio,
+    productos: obtenerProductosPedido(),
+  })
+}
+
+const procesarPagoStripe = async () => {
   procesando.value = true
   errorPago.value = ''
+  mensajePago.value = ''
 
   try {
-    await new Promise((resolve) => window.setTimeout(resolve, 1200))
-
-    await estadoPedidos.crearPedido({
-      cliente: datosUsuario.nombre,
-      user_id: datosUsuario.id,
-      total: estadoCarrito.totalPrecio,
-      productos: estadoCarrito.items.map((item) => ({
-        id: item.id,
-        nombre: item.nombre,
-        precio: item.precio,
-        cantidad: item.cantidad,
-      })),
+    const respuesta = await fetch(buildApiUrl('/pagos/checkout-sesion'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        total: estadoCarrito.totalPrecio,
+        productos: obtenerProductosPedido(),
+        cliente: datosUsuario.nombre,
+        user_id: datosUsuario.id,
+      }),
     })
+    const datos = await respuesta.json()
 
+    if (!respuesta.ok) {
+      throw new Error(datos.error || 'No se pudo crear la sesión de pago')
+    }
+
+    if (datos.session_id && stripePublishableKey && window.Stripe) {
+      const stripe = window.Stripe(stripePublishableKey)
+      const resultadoStripe = await stripe.redirectToCheckout({ sessionId: datos.session_id })
+
+      if (resultadoStripe.error) {
+        throw new Error(resultadoStripe.error.message)
+      }
+
+      return
+    }
+
+    if (datos.checkout_url) {
+      window.location.href = datos.checkout_url
+      return
+    }
+
+    await registrarPedidoActual()
+    mensajePago.value = datos.message || 'Pago simulado correctamente.'
     pagoExitoso.value = true
     estadoCarrito.vaciar()
   } catch (error) {
@@ -50,6 +91,7 @@ const procesarPagoMock = async () => {
 
 const resetearModal = () => {
   errorPago.value = ''
+  mensajePago.value = ''
   setTimeout(() => {
     pagoExitoso.value = false
   }, 500)
@@ -383,49 +425,24 @@ onUnmounted(() => {
             <strong class="fs-5 text-dark">${{ estadoCarrito.totalPrecio.toFixed(2) }} MXN</strong>
           </p>
 
-          <form @submit.prevent="procesarPagoMock">
+          <form @submit.prevent="procesarPagoStripe">
             <div v-if="errorPago" class="alert alert-danger py-2" role="alert">
               {{ errorPago }}
             </div>
-
-            <div class="mb-3">
-              <label class="form-label small text-muted fw-bold text-uppercase"
-                >Número de Tarjeta
-              </label>
-              <input
-                type="text"
-                class="form-control p-2"
-                placeholder="0000 0000 0000 0000"
-                maxlength="19"
-                required
-                :disabled="procesando"
-              />
+            <div v-if="mensajePago" class="alert alert-info py-2" role="alert">
+              {{ mensajePago }}
             </div>
 
-            <div class="row g-3 mb-4">
-              <div class="col-6">
-                <label class="form-label small text-muted fw-bold text-uppercase"
-                  >Vencimiento</label
-                >
-                <input
-                  type="text"
-                  class="form-control p-2"
-                  placeholder="MM/YY"
-                  maxlength="5"
-                  required
-                  :disabled="procesando"
-                />
-              </div>
-              <div class="col-6">
-                <label class="form-label small text-muted fw-bold text-uppercase">CVV</label>
-                <input
-                  type="password"
-                  class="form-control p-2"
-                  placeholder="123"
-                  maxlength="3"
-                  required
-                  :disabled="procesando"
-                />
+            <div class="payment-provider mb-4">
+              <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-credit-card-2-front-fill fs-2"></i>
+                <div>
+                  <h5 class="fw-bold mb-1">Stripe Checkout</h5>
+                  <p class="text-muted small mb-0">
+                    Paga en una pasarela segura con Stripe Checkout. Si falta alguna llave, se usa
+                    modo demostración.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -434,14 +451,14 @@ onUnmounted(() => {
               class="btn btn-dark w-100 py-3 rounded-pill fw-bold"
               :disabled="procesando"
             >
-              <span v-if="!procesando">Pagar Ahora</span>
+              <span v-if="!procesando">Pagar con Stripe</span>
               <span v-else>
                 <span
                   class="spinner-border spinner-border-sm me-2"
                   role="status"
                   aria-hidden="true"
                 ></span>
-                Registrando pedido...
+                Preparando pago...
               </span>
             </button>
           </form>
@@ -607,5 +624,12 @@ onUnmounted(() => {
 .form-control:focus {
   border-color: #0f172a;
   box-shadow: 0 0 0 0.25rem rgba(15, 23, 42, 0.25);
+}
+
+.payment-provider {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem;
 }
 </style>

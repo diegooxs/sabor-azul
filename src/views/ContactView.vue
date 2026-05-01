@@ -111,6 +111,37 @@
               <i class="bi bi-envelope-fill me-2 text-dark fs-5"></i> reservas@saborazul.com
             </p>
 
+            <div class="distance-box mb-4">
+              <div class="d-flex align-items-start justify-content-between gap-3">
+                <div>
+                  <h5 class="fw-bold mb-1">Distancia hasta el restaurante</h5>
+                  <p class="text-muted small mb-0">
+                    Usa tu ubicación actual y calcula la ruta en kilómetros con OSRM.
+                  </p>
+                </div>
+                <i class="bi bi-signpost-2-fill fs-3 text-dark"></i>
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-dark rounded-pill px-4 py-2 mt-3 fw-bold"
+                @click="calcularDistancia"
+                :disabled="calculandoDistancia"
+              >
+                {{ calculandoDistancia ? 'Calculando...' : 'Calcular distancia' }}
+              </button>
+
+              <div v-if="distanciaRestaurante" class="mt-3 small">
+                <strong>{{ distanciaRestaurante.distancia_km }} km</strong>
+                <span class="text-muted">
+                  aproximadamente {{ distanciaRestaurante.duracion_min }} min en auto.
+                </span>
+              </div>
+              <p v-if="errorDistancia" class="text-danger small mt-3 mb-0">
+                {{ errorDistancia }}
+              </p>
+            </div>
+
             <div
               class="flex-grow-1 w-100 mt-2 rounded-3 overflow-hidden shadow-sm"
               style="min-height: 250px"
@@ -135,10 +166,14 @@
 <script setup>
 import { reactive, ref } from 'vue'
 import { estadoMensajesContacto } from '../store/mensajesContacto'
+import { buildApiUrl } from '../config/api'
 
 const mensajeEnviado = ref(false)
 const enviando = ref(false)
 const errorEnvio = ref('')
+const calculandoDistancia = ref(false)
+const errorDistancia = ref('')
+const distanciaRestaurante = ref(null)
 
 const formulario = reactive({
   nombre: '',
@@ -167,6 +202,49 @@ const nuevoMensaje = () => {
   formulario.email = ''
   formulario.mensaje = ''
 }
+
+const obtenerUbicacionActual = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Tu navegador no permite geolocalización'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 60000,
+    })
+  })
+}
+
+const calcularDistancia = async () => {
+  calculandoDistancia.value = true
+  errorDistancia.value = ''
+  distanciaRestaurante.value = null
+
+  try {
+    const posicion = await obtenerUbicacionActual()
+    const { latitude, longitude } = posicion.coords
+    const respuesta = await fetch(
+      buildApiUrl(`/distancia-restaurante?lat=${latitude}&lng=${longitude}`),
+    )
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+      throw new Error(datos.error || 'No se pudo calcular la distancia')
+    }
+
+    distanciaRestaurante.value = datos
+  } catch (error) {
+    errorDistancia.value =
+      error.code === 1
+        ? 'Necesitas permitir el acceso a tu ubicación para calcular la distancia.'
+        : error.message || 'No se pudo calcular la distancia.'
+  } finally {
+    calculandoDistancia.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -184,6 +262,13 @@ const nuevoMensaje = () => {
 /* Animación suave para cuando aparece el mensaje de éxito */
 .text-animado {
   animation: fadeIn 0.5s ease-out;
+}
+
+.distance-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem;
 }
 @keyframes fadeIn {
   from {

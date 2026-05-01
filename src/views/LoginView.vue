@@ -56,6 +56,23 @@
           </button>
         </form>
 
+        <div class="my-4 d-flex align-items-center gap-3">
+          <hr class="flex-grow-1" />
+          <span class="text-muted small">o</span>
+          <hr class="flex-grow-1" />
+        </div>
+
+        <div v-if="googleDisponible" ref="googleButton" class="google-button-wrapper"></div>
+        <button
+          v-else
+          type="button"
+          class="btn btn-outline-dark w-100 rounded-pill py-2 fw-bold"
+          disabled
+        >
+          <i class="bi bi-google me-2"></i>Configura Google Client ID
+        </button>
+        <p v-if="errorGoogle" class="text-danger small mt-3 mb-0">{{ errorGoogle }}</p>
+
         <div class="mt-4 pt-3 border-top">
           <button
             type="button"
@@ -131,11 +148,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { datosUsuario } from '../store/usuario'
+import { GOOGLE_CLIENT_ID, datosUsuario } from '../store/usuario'
 
 const router = useRouter()
+const googleButton = ref(null)
 const nombreUsuario = ref('')
 const passwordLogin = ref('')
 const mostrarRecuperacion = ref(false)
@@ -145,19 +163,64 @@ const confirmarPassword = ref('')
 const mensajeRecuperacion = ref('')
 const mensajeClase = ref('text-muted')
 const recuperando = ref(false)
+const errorGoogle = ref('')
+const googleDisponible = computed(() => Boolean(GOOGLE_CLIENT_ID))
+
+const redirigirDespuesLogin = () => {
+  if (datosUsuario.rol === 'admin') {
+    router.push('/admin')
+  } else {
+    router.push('/')
+  }
+}
 
 const iniciarSesion = async () => {
   const resultado = await datosUsuario.iniciarSesion(nombreUsuario.value, passwordLogin.value)
 
   if (resultado.success) {
-    if (datosUsuario.rol === 'admin') {
-      router.push('/admin')
-    } else {
-      router.push('/')
-    }
+    redirigirDespuesLogin()
   } else {
     passwordLogin.value = ''
   }
+}
+
+const manejarGoogleCredential = async (response) => {
+  errorGoogle.value = ''
+  const resultado = await datosUsuario.iniciarSesionGoogle(response.credential)
+
+  if (resultado.success) {
+    redirigirDespuesLogin()
+  } else {
+    errorGoogle.value = resultado.message || 'No se pudo iniciar sesión con Google'
+  }
+}
+
+const renderizarGoogleButton = async () => {
+  if (!googleDisponible.value) return
+
+  await nextTick()
+
+  for (let intento = 0; intento < 20 && !window.google?.accounts?.id; intento++) {
+    await new Promise((resolve) => window.setTimeout(resolve, 150))
+  }
+
+  if (!window.google?.accounts?.id || !googleButton.value) {
+    errorGoogle.value = 'No se pudo cargar el botón de Google. Intenta recargar la página.'
+    return
+  }
+
+  window.google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: manejarGoogleCredential,
+  })
+
+  window.google.accounts.id.renderButton(googleButton.value, {
+    theme: 'outline',
+    size: 'large',
+    shape: 'pill',
+    width: 320,
+    text: 'signin_with',
+  })
 }
 
 const limpiarRecuperacion = () => {
@@ -192,6 +255,10 @@ const recuperarPassword = async () => {
     mensajeRecuperacion.value = resultado.message
   }
 }
+
+onMounted(() => {
+  renderizarGoogleButton()
+})
 </script>
 
 <style scoped>
@@ -211,5 +278,11 @@ const recuperarPassword = async () => {
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1rem;
+}
+
+.google-button-wrapper {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
 }
 </style>

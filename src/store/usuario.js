@@ -13,6 +13,8 @@ const estadoInicial = {
   rol: 'invitado',
 }
 
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+
 const leerSesionGuardada = () => {
   if (typeof window === 'undefined') return { ...estadoInicial }
 
@@ -99,6 +101,36 @@ export const datosUsuario = reactive({
       console.error('Error conectando al servidor:', error)
       alert('No se pudo conectar con el servidor de Sabor Azul')
       return { success: false }
+    }
+  },
+
+  async iniciarSesionGoogle(credential) {
+    try {
+      const respuesta = await fetch(buildApiUrl('/login-google'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential }),
+      })
+
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok) {
+        throw new Error(datos.message || 'No se pudo iniciar sesión con Google')
+      }
+
+      this.id = datos.id ?? null
+      this.nombre = datos.username || datos.email || 'Usuario Google'
+      this.rol = datos.rol || 'cliente'
+      this.email = datos.email || ''
+      this.foto =
+        datos.foto ||
+        `https://ui-avatars.com/api/?name=${encodeURIComponent(this.nombre)}&background=1a365d&color=fff`
+      guardarSesion(this)
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error iniciando sesión con Google:', error)
+      return { success: false, message: error.message }
     }
   },
 
