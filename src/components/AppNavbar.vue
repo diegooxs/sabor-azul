@@ -439,8 +439,7 @@ onUnmounted(() => {
                 <div>
                   <h5 class="fw-bold mb-1">Stripe Checkout</h5>
                   <p class="text-muted small mb-0">
-                    Paga en una pasarela segura con Stripe Checkout. Si falta alguna llave, se usa
-                    modo demostración.
+                    Paga en una pasarela segura con Stripe Checkout.
                   </p>
                 </div>
               </div>
