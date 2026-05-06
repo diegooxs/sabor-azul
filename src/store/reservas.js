@@ -41,6 +41,7 @@ export const estadoReservas = reactive({
           fecha: nuevaReserva.fecha,
           hora: nuevaReserva.hora,
           personas: Number(nuevaReserva.personas),
+          enviarConfirmacionEmail: Boolean(nuevaReserva.enviarConfirmacionEmail),
         }),
       })
 
@@ -51,7 +52,7 @@ export const estadoReservas = reactive({
       }
 
       this.reservas.unshift(datos)
-      return true
+      return datos
     } catch (error) {
       console.error('Error en crearReserva:', error)
       this.error = error.message

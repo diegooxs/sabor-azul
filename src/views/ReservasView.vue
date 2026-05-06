@@ -25,6 +25,10 @@
               <p class="text-center text-muted mb-4">
                 Asegura tu lugar en Sabor Azul. Por favor, llena los detalles a continuación.
               </p>
+              <div v-if="usuarioGoogle" class="alert alert-info py-2 small" role="alert">
+                Enviaremos la confirmación de tu reserva a tu correo de Google:
+                <strong>{{ datosUsuario.email }}</strong>
+              </div>
 
               <form @submit.prevent="procesarReserva">
                 <div class="mb-3">
@@ -118,6 +122,9 @@
                 >.<br /><br />
                 Hemos recibido tu información y te contactaremos pronto al correo
                 <strong class="text-dark">{{ formulario.email }}</strong> para confirmar tu mesa.
+                <span v-if="correoConfirmacionEnviado">
+                  También enviamos un correo con los detalles de tu reservación.
+                </span>
               </p>
               <button
                 @click="nuevaReserva"
@@ -134,12 +141,15 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { estadoReservas } from '../store/reservas'
+import { datosUsuario } from '../store/usuario'
 
 const reservaExitosa = ref(false)
 const cargando = ref(false)
 const error = ref('')
+const correoConfirmacionEnviado = ref(false)
+const usuarioGoogle = computed(() => datosUsuario.proveedor === 'google' && datosUsuario.email)
 
 const formulario = reactive({
   nombre: '',
@@ -149,6 +159,14 @@ const formulario = reactive({
   hora: '',
   personas: '2',
 })
+
+const llenarDatosUsuarioGoogle = () => {
+  if (!usuarioGoogle.value) return
+
+  formulario.nombre = datosUsuario.nombre || formulario.nombre
+  formulario.email = datosUsuario.email || formulario.email
+  formulario.telefono = datosUsuario.telefono || formulario.telefono
+}
 
 const procesarReserva = async () => {
   if (!formulario.nombre || !formulario.email || !formulario.fecha || !formulario.hora) {
@@ -160,15 +178,17 @@ const procesarReserva = async () => {
   error.value = ''
 
   try {
-    await estadoReservas.crearReserva({
+    const reservaCreada = await estadoReservas.crearReserva({
       nombre: formulario.nombre.trim(),
       email: formulario.email.trim(),
       telefono: formulario.telefono.trim(),
       fecha: formulario.fecha,
       hora: formulario.hora,
       personas: formulario.personas,
+      enviarConfirmacionEmail: usuarioGoogle.value,
     })
 
+    correoConfirmacionEnviado.value = Boolean(reservaCreada?.correoConfirmacion?.enviado)
     reservaExitosa.value = true
   } catch (err) {
     error.value = err.message || 'Error al procesar la reserva'
@@ -180,6 +200,7 @@ const procesarReserva = async () => {
 
 const nuevaReserva = () => {
   reservaExitosa.value = false
+  correoConfirmacionEnviado.value = false
   formulario.nombre = ''
   formulario.email = ''
   formulario.telefono = ''
@@ -187,7 +208,12 @@ const nuevaReserva = () => {
   formulario.hora = ''
   formulario.personas = '2'
   error.value = ''
+  llenarDatosUsuarioGoogle()
 }
+
+onMounted(() => {
+  llenarDatosUsuarioGoogle()
+})
 </script>
 
 <style scoped>

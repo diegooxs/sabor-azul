@@ -11,6 +11,7 @@ const estadoInicial = {
   telefono: '',
   foto: 'https://ui-avatars.com/api/?name=Invitado&background=6c757d&color=fff',
   rol: 'invitado',
+  proveedor: 'local',
 }
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
@@ -48,6 +49,7 @@ const guardarSesion = (usuario) => {
       telefono: usuario.telefono,
       foto: usuario.foto,
       rol: usuario.rol,
+      proveedor: usuario.proveedor,
     }),
   )
 }
@@ -68,6 +70,7 @@ export const datosUsuario = reactive({
   telefono: sesionInicial.telefono,
   foto: sesionInicial.foto,
   rol: sesionInicial.rol,
+  proveedor: sesionInicial.proveedor,
   urlApi: API_BASE_URL,
 
   get estaAutenticado() {
@@ -89,6 +92,7 @@ export const datosUsuario = reactive({
         this.nombre = datos.username
         this.rol = datos.rol
         this.email = username
+        this.proveedor = 'local'
         this.foto = `https://ui-avatars.com/api/?name=${datos.username}&background=1a365d&color=fff`
         guardarSesion(this)
 
@@ -122,6 +126,7 @@ export const datosUsuario = reactive({
       this.nombre = datos.username || datos.email || 'Usuario Google'
       this.rol = datos.rol || 'cliente'
       this.email = datos.email || ''
+      this.proveedor = datos.proveedor || 'google'
       this.foto =
         datos.foto ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(this.nombre)}&background=1a365d&color=fff`
