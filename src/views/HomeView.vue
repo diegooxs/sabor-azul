@@ -11,6 +11,68 @@
     <main class="container my-5">
       <div class="row g-5">
         <article class="col-lg-8">
+          <section class="weather-menu mb-5 shadow-sm">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-4">
+              <div>
+                <p class="text-uppercase text-muted fw-bold small mb-2">Recomendación por clima</p>
+                <h2 class="color-primary fw-bold mb-2">
+                  {{ climaMenu?.recomendaciones?.titulo || 'Menú según el clima' }}
+                </h2>
+                <p class="text-muted mb-0">
+                  {{
+                    climaMenu?.recomendaciones?.mensaje ||
+                    'Consultando WeatherAPI para recomendarte algo ideal.'
+                  }}
+                </p>
+              </div>
+
+              <div class="weather-pill">
+                <img
+                  v-if="climaMenu?.icono"
+                  :src="climaMenu.icono"
+                  alt="Icono del clima"
+                  width="42"
+                  height="42"
+                />
+                <i v-else class="bi bi-cloud-sun-fill fs-2"></i>
+                <div>
+                  <strong>{{ climaMenu ? `${climaMenu.temp_c}°C` : '--°C' }}</strong>
+                  <span>{{ climaMenu?.condicion || 'Cargando clima...' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="errorClima" class="alert alert-warning py-2 small">
+              {{ errorClima }}
+            </div>
+
+            <div class="row g-3">
+              <div
+                v-for="item in recomendacionesClima"
+                :key="item.id"
+                class="col-md-4"
+              >
+                <div class="weather-card h-100">
+                  <img :src="item.imagen" :alt="item.nombre" />
+                  <div class="p-3">
+                    <h3 class="h6 fw-bold color-primary mb-1">{{ item.nombre }}</h3>
+                    <p class="text-muted small mb-3">{{ item.descripcion }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <strong class="text-success">${{ item.precio.toFixed(2) }}</strong>
+                      <button
+                        class="btn btn-sm btn-dark rounded-circle"
+                        @click="agregarAlCarritoGlobal(item.id, item.nombre, item.precio, item.imagen)"
+                        title="Agregar al carrito"
+                      >
+                        <i class="bi bi-plus-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <h2 class="color-primary fw-bold mb-4">Nuestros Especiales</h2>
 
           <div class="table-responsive mb-5 shadow-sm rounded">
@@ -323,7 +385,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { buildApiUrl } from '../config/api'
 import { estadoCarrito } from '../store/carrito'
 
 const agregarAlCarritoGlobal = (id, nombre, precio, imagen) => {
@@ -332,6 +395,59 @@ const agregarAlCarritoGlobal = (id, nombre, precio, imagen) => {
 
 const emailVIP = ref('')
 const errorVIP = ref(false)
+const climaMenu = ref(null)
+const errorClima = ref('')
+const recomendacionesClima = computed(() => climaMenu.value?.recomendaciones?.items || [])
+
+const cargarClimaMenu = async () => {
+  errorClima.value = ''
+
+  try {
+    const respuesta = await fetch(buildApiUrl('/clima-menu'))
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+      throw new Error(datos.error || 'No se pudo consultar el clima')
+    }
+
+    climaMenu.value = datos
+  } catch (error) {
+    console.error('No se pudo cargar el clima:', error)
+    errorClima.value = 'No se pudo consultar el clima. Mostrando recomendaciones generales.'
+    climaMenu.value = {
+      temp_c: 24,
+      condicion: 'Templado',
+      recomendaciones: {
+        titulo: 'Clima agradable en Oaxaca',
+        mensaje: 'El día está ideal para especiales de la casa y experiencias del chef.',
+        items: [
+          {
+            id: 103,
+            nombre: 'Exp. Tres Cocinas',
+            descripcion: 'Oaxaqueña, mexicana e internacional en una experiencia.',
+            precio: 850,
+            imagen: 'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=300&q=80',
+          },
+          {
+            id: 102,
+            nombre: 'Pizza Azul',
+            descripcion: 'Higos, jamón serrano y queso gorgonzola.',
+            precio: 400,
+            imagen: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=300&q=80',
+          },
+          {
+            id: 104,
+            nombre: 'Esferas de Cacao',
+            descripcion: 'Postre de cacao nativo con mousse de mamey.',
+            precio: 220,
+            imagen: 'https://images.unsplash.com/photo-1639158924965-7be3bb57506b?w=300&q=80',
+          },
+        ],
+      },
+    }
+  }
+}
+
 const suscribirVIP = () => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   if (emailRegex.test(emailVIP.value)) {
@@ -345,6 +461,8 @@ const suscribirVIP = () => {
 }
 
 onMounted(() => {
+  cargarClimaMenu()
+
   const elementosAnimados = document.querySelectorAll('.scroll-animado')
   const observer = new IntersectionObserver(
     (entries) => {
@@ -426,6 +544,50 @@ onMounted(() => {
 .food-card:hover {
   transform: scale(1.02);
   transition: transform 0.3s;
+}
+
+.weather-menu {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.weather-pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 170px;
+  background: #e8f0f8;
+  color: #1a365d;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.weather-pill strong,
+.weather-pill span {
+  display: block;
+  line-height: 1.1;
+}
+
+.weather-pill span {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+.weather-card {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.weather-card img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
 }
 
 .platillo-destacado-wrapper {
