@@ -73,6 +73,49 @@
             </div>
           </section>
 
+          <section class="route-map mb-5 shadow-sm">
+            <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
+              <div>
+                <p class="text-uppercase text-muted fw-bold small mb-2">Mapa interactivo</p>
+                <h2 class="color-primary fw-bold mb-2">Ruta real hasta Sabor Azul</h2>
+                <p class="text-muted mb-0">
+                  Obtén tu ubicación, traza la ruta por calles y descubre parques o museos cercanos.
+                </p>
+              </div>
+              <button
+                class="btn btn-dark rounded-pill px-4 align-self-md-start"
+                @click="calcularRutaYLugares"
+                :disabled="cargandoRuta"
+              >
+                {{ cargandoRuta ? 'Calculando...' : 'Cómo llegar' }}
+              </button>
+            </div>
+
+            <div v-if="errorMapa" class="alert alert-warning py-2 small">
+              {{ errorMapa }}
+            </div>
+
+            <div ref="mapaContenedor" class="map-container"></div>
+
+            <div v-if="rutaMapa" class="route-summary mt-3">
+              <span><strong>{{ rutaMapa.distancia_km }} km</strong> hasta el restaurante</span>
+              <span>{{ rutaMapa.duracion_min }} min aprox. en auto</span>
+            </div>
+
+            <div v-if="lugaresCercanos.length" class="mt-3">
+              <h3 class="h6 fw-bold color-primary mb-2">Lugares cercanos encontrados</h3>
+              <div class="vstack gap-2">
+                <div v-for="lugar in lugaresCercanos" :key="lugar.place_id" class="nearby-place">
+                  <i class="bi bi-pin-map-fill text-danger"></i>
+                  <div>
+                    <strong>{{ lugar.nombre }}</strong>
+                    <span>{{ lugar.direccion || 'Dirección no disponible' }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <h2 class="color-primary fw-bold mb-4">Nuestros Especiales</h2>
 
           <div class="table-responsive mb-5 shadow-sm rounded">
@@ -398,6 +441,15 @@ const errorVIP = ref(false)
 const climaMenu = ref(null)
 const errorClima = ref('')
 const recomendacionesClima = computed(() => climaMenu.value?.recomendaciones?.items || [])
+const mapaContenedor = ref(null)
+const mapaGoogle = ref(null)
+const rutaPolyline = ref(null)
+const marcadoresMapa = ref([])
+const rutaMapa = ref(null)
+const lugaresCercanos = ref([])
+const cargandoRuta = ref(false)
+const errorMapa = ref('')
+const restauranteCoords = { lat: 17.062635, lng: -96.727788 }
 
 const cargarClimaMenu = async () => {
   errorClima.value = ''
@@ -460,8 +512,157 @@ const suscribirVIP = () => {
   }
 }
 
+const cargarGoogleMapsSdk = async () => {
+  if (window.google?.maps) return
+  if (window.__saborAzulMapsPromise) return window.__saborAzulMapsPromise
+
+  window.__saborAzulMapsPromise = new Promise(async (resolve, reject) => {
+    try {
+      const respuesta = await fetch(buildApiUrl('/maps-config'))
+      const datos = await respuesta.json()
+
+      if (!respuesta.ok || !datos.apiKey) {
+        throw new Error(datos.error || 'No se pudo cargar Google Maps')
+      }
+
+      window.__saborAzulMapsReady = resolve
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${datos.apiKey}&libraries=places&callback=__saborAzulMapsReady`
+      script.async = true
+      script.defer = true
+      script.onerror = () => reject(new Error('No se pudo cargar el SDK de Google Maps'))
+      document.head.appendChild(script)
+    } catch (error) {
+      reject(error)
+    }
+  })
+
+  return window.__saborAzulMapsPromise
+}
+
+const agregarMarcadorMapa = (position, title, label) => {
+  const marker = new window.google.maps.Marker({
+    map: mapaGoogle.value,
+    position,
+    title,
+    label,
+  })
+  marcadoresMapa.value.push(marker)
+  return marker
+}
+
+const limpiarRutaMapa = () => {
+  if (rutaPolyline.value) {
+    rutaPolyline.value.setMap(null)
+    rutaPolyline.value = null
+  }
+
+  marcadoresMapa.value.forEach((marker) => marker.setMap(null))
+  marcadoresMapa.value = []
+  lugaresCercanos.value = []
+  rutaMapa.value = null
+}
+
+const inicializarMapa = async () => {
+  try {
+    await cargarGoogleMapsSdk()
+
+    if (!mapaContenedor.value || mapaGoogle.value) return
+
+    mapaGoogle.value = new window.google.maps.Map(mapaContenedor.value, {
+      center: restauranteCoords,
+      zoom: 14,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+    })
+
+    agregarMarcadorMapa(restauranteCoords, 'Sabor Azul', 'R')
+  } catch (error) {
+    console.error('No se pudo iniciar Google Maps:', error)
+    errorMapa.value = error.message || 'No se pudo cargar Google Maps'
+  }
+}
+
+const obtenerUbicacionActual = () => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Tu navegador no permite geolocalización'))
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 60000,
+    })
+  })
+}
+
+const calcularRutaYLugares = async () => {
+  cargandoRuta.value = true
+  errorMapa.value = ''
+
+  try {
+    await inicializarMapa()
+    if (!mapaGoogle.value) throw new Error('El mapa todavía no está disponible')
+
+    const posicion = await obtenerUbicacionActual()
+    const origen = {
+      lat: posicion.coords.latitude,
+      lng: posicion.coords.longitude,
+    }
+
+    const respuesta = await fetch(buildApiUrl('/ruta-y-lugares'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(origen),
+    })
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok) {
+      throw new Error(datos.error || 'No se pudo calcular la ruta')
+    }
+
+    limpiarRutaMapa()
+    agregarMarcadorMapa(origen, 'Tu ubicación', 'U')
+    agregarMarcadorMapa(datos.destino, 'Sabor Azul', 'R')
+
+    rutaPolyline.value = new window.google.maps.Polyline({
+      map: mapaGoogle.value,
+      path: datos.ruta.polyline,
+      geodesic: true,
+      strokeColor: '#2563eb',
+      strokeOpacity: 0.95,
+      strokeWeight: 5,
+    })
+
+    const bounds = new window.google.maps.LatLngBounds()
+    datos.ruta.polyline.forEach((point) => bounds.extend(point))
+
+    lugaresCercanos.value = datos.lugares || []
+    lugaresCercanos.value.forEach((lugar, index) => {
+      const position = { lat: lugar.lat, lng: lugar.lng }
+      agregarMarcadorMapa(position, lugar.nombre, String(index + 1))
+      bounds.extend(position)
+    })
+
+    mapaGoogle.value.fitBounds(bounds)
+    rutaMapa.value = datos.ruta
+  } catch (error) {
+    console.error('No se pudo calcular la ruta:', error)
+    errorMapa.value =
+      error.code === 1
+        ? 'Necesitas permitir el acceso a tu ubicación para trazar la ruta.'
+        : error.message || 'No se pudo calcular la ruta.'
+  } finally {
+    cargandoRuta.value = false
+  }
+}
+
 onMounted(() => {
   cargarClimaMenu()
+  inicializarMapa()
 
   const elementosAnimados = document.querySelectorAll('.scroll-animado')
   const observer = new IntersectionObserver(
@@ -588,6 +789,50 @@ onMounted(() => {
   width: 100%;
   height: 130px;
   object-fit: cover;
+}
+
+.route-map {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.map-container {
+  width: 100%;
+  min-height: 360px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.route-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: #1a365d;
+}
+
+.route-summary span {
+  background: #e8f0f8;
+  border-radius: 999px;
+  padding: 0.45rem 0.8rem;
+}
+
+.nearby-place {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.nearby-place span {
+  display: block;
+  color: #64748b;
+  font-size: 0.85rem;
 }
 
 .platillo-destacado-wrapper {
