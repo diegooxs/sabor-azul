@@ -47,11 +47,7 @@
             </div>
 
             <div class="row g-3">
-              <div
-                v-for="item in recomendacionesClima"
-                :key="item.id"
-                class="col-md-4"
-              >
+              <div v-for="item in recomendacionesClima" :key="item.id" class="col-md-4">
                 <div class="weather-card h-100">
                   <img :src="item.imagen" :alt="item.nombre" />
                   <div class="p-3">
@@ -61,7 +57,9 @@
                       <strong class="text-success">${{ item.precio.toFixed(2) }}</strong>
                       <button
                         class="btn btn-sm btn-dark rounded-circle"
-                        @click="agregarAlCarritoGlobal(item.id, item.nombre, item.precio, item.imagen)"
+                        @click="
+                          agregarAlCarritoGlobal(item.id, item.nombre, item.precio, item.imagen)
+                        "
                         title="Agregar al carrito"
                       >
                         <i class="bi bi-plus-lg"></i>
@@ -98,7 +96,9 @@
             <div ref="mapaContenedor" class="map-container"></div>
 
             <div v-if="rutaMapa" class="route-summary mt-3">
-              <span><strong>{{ rutaMapa.distancia_km }} km</strong> hasta el restaurante</span>
+              <span
+                ><strong>{{ rutaMapa.distancia_km }} km</strong> hasta el restaurante</span
+              >
               <span>{{ rutaMapa.duracion_min }} min aprox. en auto</span>
             </div>
 
@@ -685,7 +685,7 @@ onMounted(() => {
 .hero-section {
   height: 100vh;
   width: 100%;
-  background-image: url('https://png.pngtree.com/background/20250105/original/pngtree-light-blue-velvet-background-dark-texture-with-a-gradient-picture-image_15759173.jpg');
+  background-image: url('/fondo-azul.jpg');
   background-size: cover;
   background-position: center;
   position: relative;
