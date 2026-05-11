@@ -516,25 +516,30 @@ const cargarGoogleMapsSdk = async () => {
   if (window.google?.maps) return
   if (window.__saborAzulMapsPromise) return window.__saborAzulMapsPromise
 
-  window.__saborAzulMapsPromise = new Promise(async (resolve, reject) => {
-    try {
-      const respuesta = await fetch(buildApiUrl('/maps-config'))
-      const datos = await respuesta.json()
+  window.__saborAzulMapsPromise = new Promise((resolve, reject) => {
+    const cargarConfig = async () => {
+      try {
+        const respuesta = await fetch(buildApiUrl('/maps-config'))
+        const datos = await respuesta.json()
 
-      if (!respuesta.ok || !datos.apiKey) {
-        throw new Error(datos.error || 'No se pudo cargar Google Maps')
+        if (!respuesta.ok || !datos.apiKey) {
+          throw new Error(datos.error || 'No se pudo cargar Google Maps')
+        }
+
+        window.__saborAzulMapsReady = resolve
+        const script = document.createElement('script')
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${datos.apiKey}&libraries=places&callback=__saborAzulMapsReady`
+        script.async = true
+        script.defer = true
+        script.onerror = () => reject(new Error('No se pudo cargar el SDK de Google Maps'))
+        document.head.appendChild(script)
+      } catch (error) {
+        reject(error)
       }
-
-      window.__saborAzulMapsReady = resolve
-      const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${datos.apiKey}&libraries=places&callback=__saborAzulMapsReady`
-      script.async = true
-      script.defer = true
-      script.onerror = () => reject(new Error('No se pudo cargar el SDK de Google Maps'))
-      document.head.appendChild(script)
-    } catch (error) {
-      reject(error)
     }
+
+    // Ejecutamos la función
+    cargarConfig()
   })
 
   return window.__saborAzulMapsPromise
