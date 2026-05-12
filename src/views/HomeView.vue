@@ -75,7 +75,7 @@
             <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
               <div>
                 <p class="text-uppercase text-muted fw-bold small mb-2">Mapa interactivo</p>
-                <h2 class="color-primary fw-bold mb-2">Ruta real hasta Sabor Azul</h2>
+                <h2 class="color-primary fw-bold mb-2">Ruta hasta Sabor Azul</h2>
                 <p class="text-muted mb-0">
                   Obtén tu ubicación, traza la ruta por calles y descubre parques o museos cercanos.
                 </p>
@@ -97,7 +97,8 @@
 
             <div v-if="rutaMapa" class="route-summary mt-3">
               <span
-                ><strong>{{ rutaMapa.distancia_km }} km</strong> hasta el restaurante</span
+                ><strong>{{ rutaMapa.distancia_km }} km</strong> hasta
+                {{ rutaMapa.destino_nombre || 'Sabor Azul' }}</span
               >
               <span>{{ rutaMapa.duracion_min }} min aprox. en auto</span>
             </div>
@@ -538,7 +539,6 @@ const cargarGoogleMapsSdk = async () => {
       }
     }
 
-    // Ejecutamos la función
     cargarConfig()
   })
 
@@ -648,7 +648,15 @@ const calcularRutaYLugares = async () => {
     lugaresCercanos.value = datos.lugares || []
     lugaresCercanos.value.forEach((lugar, index) => {
       const position = { lat: lugar.lat, lng: lugar.lng }
-      agregarMarcadorMapa(position, lugar.nombre, String(index + 1))
+
+      // Guardamos el marcador en una variable al crearlo
+      const marker = agregarMarcadorMapa(position, lugar.nombre, String(index + 1))
+
+      // LE AGREGAMOS EL EVENTO DE CLIC AL MARCADOR
+      marker.addListener('click', () => {
+        trazarRutaHaciaLugar(lugar.lat, lugar.lng, lugar.nombre)
+      })
+
       bounds.extend(position)
     })
 
@@ -660,6 +668,64 @@ const calcularRutaYLugares = async () => {
       error.code === 1
         ? 'Necesitas permitir el acceso a tu ubicación para trazar la ruta.'
         : error.message || 'No se pudo calcular la ruta.'
+  } finally {
+    cargandoRuta.value = false
+  }
+}
+// NUEVA FUNCIÓN PARA CAMBIAR LA RUTA AL HACER CLIC EN UN MARCADOR
+const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
+  cargandoRuta.value = true
+  try {
+    const posicion = await obtenerUbicacionActual()
+    const origen = {
+      lat: posicion.coords.latitude,
+      lng: posicion.coords.longitude,
+    }
+    const destino = { lat: lugarLat, lng: lugarLng }
+
+    // Pedimos la nueva ruta a OSRM (nuestro backend)
+    const osrmUrl = new URL(
+      `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}`,
+    )
+    osrmUrl.searchParams.set('overview', 'full')
+    osrmUrl.searchParams.set('geometries', 'geojson')
+
+    const respuesta = await fetch(osrmUrl)
+    const datos = await respuesta.json()
+
+    if (!respuesta.ok || datos.code !== 'Ok') {
+      throw new Error('No se pudo trazar la ruta hacia el lugar')
+    }
+
+    // Borramos solo la línea azul anterior
+    if (rutaPolyline.value) {
+      rutaPolyline.value.setMap(null)
+    }
+
+    const ruta = datos.routes[0]
+    const polylineCoords = (ruta.geometry?.coordinates || []).map(([pLng, pLat]) => ({
+      lat: pLat,
+      lng: pLng,
+    }))
+
+    // Dibujamos la nueva línea
+    rutaPolyline.value = new window.google.maps.Polyline({
+      map: mapaGoogle.value,
+      path: polylineCoords,
+      geodesic: true,
+      strokeColor: '#e74c3c', // Rojo para diferenciar que es una ruta a un lugar, no al restaurante
+      strokeOpacity: 0.95,
+      strokeWeight: 5,
+    })
+
+    // Actualizamos los textos de distancia en la pantalla
+    rutaMapa.value = {
+      distancia_km: Number((ruta.distance / 1000).toFixed(2)),
+      duracion_min: Math.round(ruta.duration / 60),
+      destino_nombre: nombreLugar,
+    }
+  } catch (error) {
+    console.error('Error al trazar ruta alterna:', error)
   } finally {
     cargandoRuta.value = false
   }
@@ -725,7 +791,6 @@ onMounted(() => {
   }
 }
 
-/* CLASES DE UTILIDAD GENERALES */
 .color-primary {
   color: #1a365d;
 }
