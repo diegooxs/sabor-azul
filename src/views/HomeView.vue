@@ -683,23 +683,19 @@ const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
     }
     const destino = { lat: lugarLat, lng: lugarLng }
 
-    // Pedimos la nueva ruta a OSRM (nuestro backend)
+    // Pedimos la nueva ruta a OSRM
     const osrmUrl = new URL(
       `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}`,
     )
     osrmUrl.searchParams.set('overview', 'full')
     osrmUrl.searchParams.set('geometries', 'geojson')
 
+    // Esperamos a que el servidor responda
     const respuesta = await fetch(osrmUrl)
     const datos = await respuesta.json()
 
     if (!respuesta.ok || datos.code !== 'Ok') {
       throw new Error('No se pudo trazar la ruta hacia el lugar')
-    }
-
-    // Borramos solo la línea azul anterior
-    if (rutaPolyline.value) {
-      rutaPolyline.value.setMap(null)
     }
 
     const ruta = datos.routes[0]
@@ -708,17 +704,24 @@ const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
       lng: pLng,
     }))
 
+    // ¡LA SOLUCIÓN ESTÁ AQUÍ!
+    // Borramos la línea anterior JUSTO ANTES de dibujar la nueva,
+    // garantizando que nunca se sobrepongan, sin importar qué tan rápido des clic.
+    if (rutaPolyline.value) {
+      rutaPolyline.value.setMap(null)
+    }
+
     // Dibujamos la nueva línea
     rutaPolyline.value = new window.google.maps.Polyline({
       map: mapaGoogle.value,
       path: polylineCoords,
       geodesic: true,
-      strokeColor: '#e74c3c', // Rojo para diferenciar que es una ruta a un lugar, no al restaurante
+      strokeColor: '#e74c3c', // Rojo para diferenciar que es un lugar
       strokeOpacity: 0.95,
       strokeWeight: 5,
     })
 
-    // Actualizamos los textos de distancia en la pantalla
+    // Actualizamos los textos
     rutaMapa.value = {
       distancia_km: Number((ruta.distance / 1000).toFixed(2)),
       duracion_min: Math.round(ruta.duration / 60),
