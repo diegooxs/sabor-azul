@@ -293,4 +293,36 @@ const cerrarLightbox = () => {
   opacity: 0;
   transform: scale(1.1);
 }
+
+@media (max-width: 767.98px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .elegante {
+    letter-spacing: 1px;
+  }
+
+  .filter-container {
+    gap: 1rem !important;
+  }
+
+  .filter-item {
+    font-size: 0.82rem;
+  }
+
+  .card-img-top {
+    height: 210px;
+  }
+
+  .lightbox-content {
+    max-width: calc(100% - 2rem);
+    padding: 0.5rem;
+  }
+
+  .lightbox-img {
+    max-height: 72vh;
+  }
+}
 </style>

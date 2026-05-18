@@ -228,6 +228,21 @@ onMounted(() => {
 .text-animado {
   animation: fadeIn 0.6s ease-out;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+  }
+
+  .card-body {
+    padding: 1.25rem !important;
+  }
+
+  .btn {
+    white-space: normal;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

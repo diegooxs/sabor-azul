@@ -284,5 +284,22 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   min-height: 44px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+@media (max-width: 575.98px) {
+  .min-vh-100 {
+    align-items: flex-start !important;
+    padding: 5rem 1rem 2rem;
+  }
+
+  .card {
+    max-width: 100% !important;
+  }
+
+  .card-body {
+    padding: 1.5rem !important;
+  }
 }
 </style>

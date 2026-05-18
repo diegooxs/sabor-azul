@@ -368,4 +368,34 @@ onMounted(() => {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .admin-access-card {
+    min-height: 74px;
+    flex-direction: column;
+    gap: 0.35rem;
+    text-align: center;
+    font-size: 0.85rem;
+  }
+
+  .admin-access-card i {
+    font-size: 1.25rem;
+  }
+
+  .card-body.p-4,
+  .card-body.p-xl-5,
+  .card-header.p-4 {
+    padding: 1.25rem !important;
+  }
+
+  table {
+    min-width: 680px;
+  }
+}
 </style>

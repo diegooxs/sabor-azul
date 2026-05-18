@@ -649,10 +649,8 @@ const calcularRutaYLugares = async () => {
     lugaresCercanos.value.forEach((lugar, index) => {
       const position = { lat: lugar.lat, lng: lugar.lng }
 
-      // Guardamos el marcador en una variable al crearlo
       const marker = agregarMarcadorMapa(position, lugar.nombre, String(index + 1))
 
-      // LE AGREGAMOS EL EVENTO DE CLIC AL MARCADOR
       marker.addListener('click', () => {
         trazarRutaHaciaLugar(lugar.lat, lugar.lng, lugar.nombre)
       })
@@ -672,7 +670,6 @@ const calcularRutaYLugares = async () => {
     cargandoRuta.value = false
   }
 }
-// NUEVA FUNCIÓN PARA CAMBIAR LA RUTA AL HACER CLIC EN UN MARCADOR
 const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
   cargandoRuta.value = true
   try {
@@ -683,14 +680,12 @@ const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
     }
     const destino = { lat: lugarLat, lng: lugarLng }
 
-    // Pedimos la nueva ruta a OSRM
     const osrmUrl = new URL(
       `https://router.project-osrm.org/route/v1/driving/${origen.lng},${origen.lat};${destino.lng},${destino.lat}`,
     )
     osrmUrl.searchParams.set('overview', 'full')
     osrmUrl.searchParams.set('geometries', 'geojson')
 
-    // Esperamos a que el servidor responda
     const respuesta = await fetch(osrmUrl)
     const datos = await respuesta.json()
 
@@ -703,25 +698,19 @@ const trazarRutaHaciaLugar = async (lugarLat, lugarLng, nombreLugar) => {
       lat: pLat,
       lng: pLng,
     }))
-
-    // ¡LA SOLUCIÓN ESTÁ AQUÍ!
-    // Borramos la línea anterior JUSTO ANTES de dibujar la nueva,
-    // garantizando que nunca se sobrepongan, sin importar qué tan rápido des clic.
     if (rutaPolyline.value) {
       rutaPolyline.value.setMap(null)
     }
 
-    // Dibujamos la nueva línea
     rutaPolyline.value = new window.google.maps.Polyline({
       map: mapaGoogle.value,
       path: polylineCoords,
       geodesic: true,
-      strokeColor: '#e74c3c', // Rojo para diferenciar que es un lugar
+      strokeColor: '#e74c3c',
       strokeOpacity: 0.95,
       strokeWeight: 5,
     })
 
-    // Actualizamos los textos
     rutaMapa.value = {
       distancia_km: Number((ruta.distance / 1000).toFixed(2)),
       duracion_min: Math.round(ruta.duration / 60),
@@ -757,7 +746,7 @@ onMounted(() => {
 
 <style scoped>
 .hero-section {
-  height: 100vh;
+  min-height: 100svh;
   width: 100%;
   background-image: url('/fondo-azul.jpg');
   background-size: cover;
@@ -767,11 +756,17 @@ onMounted(() => {
 .hero-overlay {
   position: absolute;
   top: 0;
+  right: 0;
+  bottom: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   background-color: rgba(0, 0, 0, 0.45);
 }
+
+.content {
+  width: min(92vw, 820px);
+  padding: 0 1rem;
+}
+
 .elegante {
   font-family: 'Times New Roman', serif;
   font-style: italic;
@@ -943,7 +938,7 @@ onMounted(() => {
   z-index: 1;
 }
 
-@media (min-lg-width: 992px) {
+@media (min-width: 992px) {
   .order-lg-2 {
     order: 2;
     right: 0;
@@ -975,5 +970,90 @@ onMounted(() => {
 
 .modal-term-style {
   border-radius: 8px;
+}
+
+@media (max-width: 991.98px) {
+  main.container {
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  aside .sticky-top {
+    position: static !important;
+  }
+
+  .weather-pill {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .map-container {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .hero-section {
+    min-height: 82svh;
+  }
+
+  .elegante {
+    letter-spacing: 2px;
+  }
+
+  .sub-elegante {
+    font-size: 1rem !important;
+    letter-spacing: 1.5px;
+  }
+
+  .weather-menu,
+  .route-map {
+    padding: 1rem;
+  }
+
+  .route-map .btn {
+    width: 100%;
+  }
+
+  .route-summary {
+    flex-direction: column;
+  }
+
+  .route-summary span {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .food-card img {
+    height: 220px !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .img-container img {
+    height: 260px !important;
+  }
+
+  .scroll-animado {
+    transform: translateY(16px);
+  }
+}
+
+@media (max-width: 575.98px) {
+  .weather-card img {
+    height: 170px;
+  }
+
+  .map-container {
+    min-height: 280px;
+  }
+
+  .nearby-place {
+    align-items: flex-start;
+  }
+
+  .modal-body,
+  .modal-content.p-4 {
+    padding: 1.25rem !important;
+  }
 }
 </style>

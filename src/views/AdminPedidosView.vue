@@ -205,4 +205,32 @@ onMounted(() => {
 .color-primary {
   color: #1a365d;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .card-body.p-4 {
+    padding: 1.25rem !important;
+  }
+
+  .d-flex.align-items-center.flex-wrap.gap-2 {
+    width: 100%;
+  }
+
+  .d-flex.align-items-center.flex-wrap.gap-2 > * {
+    flex: 1 1 100%;
+  }
+
+  select.form-select {
+    min-width: 0 !important;
+  }
+
+  table {
+    min-width: 560px;
+  }
+}
 </style>

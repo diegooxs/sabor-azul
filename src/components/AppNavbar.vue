@@ -608,6 +608,10 @@ onUnmounted(() => {
 </style>
 
 <style scoped>
+.navbar-toggler-icon {
+  filter: invert(1);
+}
+
 .nav-link {
   transition: opacity 0.3s ease;
   opacity: 0.7;
@@ -630,5 +634,55 @@ onUnmounted(() => {
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
   padding: 1rem;
+}
+
+@media (max-width: 991.98px) {
+  .navbar {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  .navbar-collapse {
+    margin-top: 0.9rem;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: rgba(15, 23, 42, 0.97);
+    box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.22);
+  }
+
+  .navbar-nav {
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+    letter-spacing: 1px !important;
+  }
+
+  .nav-link {
+    width: 100%;
+    padding: 0.55rem 0;
+  }
+
+  .dropdown-menu {
+    width: 100%;
+    border: 0;
+    box-shadow: none !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar-brand span {
+    font-size: 1rem;
+  }
+
+  .offcanvas {
+    width: min(100vw, 380px) !important;
+  }
+
+  .modal-body {
+    padding: 1.5rem !important;
+  }
+
+  .payment-provider {
+    padding: 0.85rem;
+  }
 }
 </style>

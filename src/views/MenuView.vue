@@ -195,4 +195,35 @@ onMounted(() => {
   transform: translateY(-8px);
   box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.15) !important;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 9vw, 3rem);
+    letter-spacing: 1px !important;
+  }
+
+  .input-group .form-control {
+    font-size: 1rem;
+  }
+
+  .d-flex.flex-wrap.justify-content-center.gap-2 > .btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .card-img-top {
+    height: 210px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .d-flex.flex-wrap.justify-content-center.gap-2 > .btn {
+    flex-basis: 100%;
+  }
+}
 </style>

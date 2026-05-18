@@ -259,7 +259,6 @@ const calcularDistancia = async () => {
   box-shadow: 0 0 0 0.25rem rgba(15, 23, 42, 0.25);
 }
 
-/* Animación suave para cuando aparece el mensaje de éxito */
 .text-animado {
   animation: fadeIn 0.5s ease-out;
 }
@@ -270,6 +269,33 @@ const calcularDistancia = async () => {
   border-radius: 1rem;
   padding: 1rem;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+  }
+
+  .row.g-5 {
+    --bs-gutter-y: 1.5rem;
+  }
+
+  .card.p-4 {
+    padding: 1.25rem !important;
+  }
+
+  .distance-box .d-flex {
+    flex-direction: column;
+  }
+
+  .distance-box .btn {
+    width: 100%;
+  }
+
+  iframe {
+    min-height: 260px;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

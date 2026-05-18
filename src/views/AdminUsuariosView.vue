@@ -139,3 +139,28 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+@media (max-width: 767.98px) {
+  .container {
+    margin-top: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .col-md-1 .btn,
+  .btn-sm {
+    width: 100%;
+  }
+
+  td:last-child {
+    min-width: 150px;
+  }
+}
+</style>

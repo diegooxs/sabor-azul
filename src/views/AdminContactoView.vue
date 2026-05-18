@@ -132,4 +132,24 @@ onMounted(() => {
   max-width: 520px;
   white-space: pre-wrap;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .card-header {
+    padding: 1.25rem !important;
+  }
+
+  table {
+    min-width: 760px;
+  }
+
+  .mensaje-columna {
+    max-width: 360px;
+  }
+}
 </style>

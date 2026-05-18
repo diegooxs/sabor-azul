@@ -1,7 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { datosUsuario } from '@/store/usuario'
 
-// Importaciones de Vistas
 import HomeView from '@/views/HomeView.vue'
 import MenuView from '@/views/MenuView.vue'
 import LoginView from '@/views/LoginView.vue'

@@ -44,11 +44,39 @@ import AppNavbar from './components/AppNavbar.vue'
 </template>
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  overflow-x: hidden;
+}
+
 #app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
+
+img,
+svg,
+video,
+canvas,
+iframe {
+  max-width: 100%;
+}
+
+input,
+select,
+textarea,
+button,
+.btn {
+  min-width: 0;
+}
+
 body {
   background-color: #f8f9fa;
 }
@@ -68,5 +96,37 @@ body {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(-15px);
+}
+
+@media (max-width: 767.98px) {
+  main.container,
+  main.container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .card-body.p-5,
+  .p-5 {
+    padding: 1.5rem !important;
+  }
+
+  .display-1 {
+    font-size: clamp(3rem, 18vw, 5rem);
+  }
+
+  .table {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .btn {
+    white-space: normal;
+  }
 }
 </style>

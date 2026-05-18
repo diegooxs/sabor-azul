@@ -8,7 +8,7 @@ export const estadoMenu = reactive({
   error: '',
   platillos: [],
   categorias: [],
-  mapaCategoriasId: {}, // id -> nombre
+  mapaCategoriasId: {},
 
   normalizarPlatillo(platillo) {
     return {

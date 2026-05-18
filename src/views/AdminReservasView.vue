@@ -178,4 +178,20 @@ table select:focus {
   font-size: 0.875rem;
   font-weight: 500;
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .card-header {
+    padding: 1.25rem !important;
+  }
+
+  table {
+    min-width: 760px;
+  }
+}
 </style>

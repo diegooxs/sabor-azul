@@ -84,4 +84,24 @@ const guardarCambios = () => {
   border-color: #1a365d;
   box-shadow: 0 0 0 0.25rem rgba(26, 54, 93, 0.1);
 }
+
+@media (max-width: 767.98px) {
+  main {
+    padding-top: 4.5rem !important;
+  }
+
+  .col-md-4,
+  .col-md-8 {
+    padding: 1.5rem !important;
+  }
+
+  .mt-5.d-flex {
+    flex-direction: column;
+    margin-top: 2rem !important;
+  }
+
+  .mt-5.d-flex .btn {
+    width: 100%;
+  }
+}
 </style>
